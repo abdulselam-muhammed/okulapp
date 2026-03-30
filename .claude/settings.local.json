@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker exec mariadb mariadb -uroot -prootpassword okulapp -e \":*)",
+      "Bash(docker exec:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tsx -e \":*)"
+    ]
+  }
+}
