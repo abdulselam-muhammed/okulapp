@@ -142,6 +142,24 @@ export const POST = handler(async (req) => {
 | **vet** | Set availability, accept animal cases, enter diagnosis/treatment feedback |
 | **user** | Report injured animals, track own report status |
 
+## Swagger / OpenAPI
+
+Every endpoint MUST be documented in the OpenAPI spec.
+
+- **Spec file:** `lib/swagger/openapi.ts` — single source of truth
+- **JSON served at:** `GET /api/docs` (public, no auth)
+- **Swagger UI page:** `/docs` (loads swagger-ui from CDN)
+
+### When creating a new endpoint:
+1. Add the path entry to `openApiSpec.paths` in `lib/swagger/openapi.ts`
+2. Add any new request/response schemas to `openApiSpec.components.schemas`
+3. Use `$ref: "#/components/schemas/SchemaName"` to reference shared schemas
+4. Set `security: []` on public endpoints (no auth required)
+5. Include proper `tags`, `summary`, `parameters`, `requestBody`, and `responses`
+
+### If adding a public endpoint:
+Add the route to `PUBLIC_ROUTES` array in `proxy.ts`
+
 ## Rules
 
 1. **ALWAYS** read `node_modules/next/dist/docs/` for Next.js conventions before writing route handlers
@@ -149,9 +167,10 @@ export const POST = handler(async (req) => {
 3. **NEVER** write raw SQL in services — use repositories
 4. **ALWAYS** validate input with DTOs before passing to services
 5. **ALWAYS** wrap route handlers with `handler()` for consistent error handling
-6. Dynamic route params are a **Promise** in Next.js 16 — always `await params`
-7. If a new DTO, service method, or repository method is needed, create it following existing patterns
-8. Use `res.success()` for 200, `res.created()` for 201, `res.noContent()` for 204
+6. **ALWAYS** add the endpoint to the OpenAPI spec in `lib/swagger/openapi.ts`
+7. Dynamic route params are a **Promise** in Next.js 16 — always `await params`
+8. If a new DTO, service method, or repository method is needed, create it following existing patterns
+9. Use `res.success()` for 200, `res.created()` for 201, `res.noContent()` for 204
 
 ## Database
 

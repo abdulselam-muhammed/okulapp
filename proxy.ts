@@ -5,6 +5,7 @@ import type { NextRequest } from "next/server";
 const PUBLIC_ROUTES = [
   "/api/auth/login",
   "/api/auth/register",
+  "/api/docs",
 ];
 
 export function proxy(request: NextRequest) {
