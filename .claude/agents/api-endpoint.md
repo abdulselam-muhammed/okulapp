@@ -84,6 +84,54 @@ All DB enums are typed: `UserRole`, `ReportType`, `Priority`, `ReportStatus`, `T
 - `vet.dto.ts` — updateVetAvailabilityDto, createVetCaseDto, updateVetCaseDto
 - `donation.dto.ts` — createDonationDto, createPurchaseDto
 
+## Authentication & Authorization
+
+### Auth Helpers (`lib/helpers/auth.ts`)
+- `hashPassword(password)` — bcrypt hash (cost 12)
+- `comparePassword(password, hash)` — bcrypt compare
+- `signToken(payload)` — signs JWT with 7-day expiry
+- `verifyToken(token)` — verifies JWT, throws ApiError.unauthorized on failure
+- `getAuth(req)` — extracts JwtPayload `{ userId, email, role }` from `Authorization: Bearer <token>` header. Use in any protected route.
+- `requireRole(req, ...roles)` — same as getAuth but also checks role. Throws ApiError.forbidden if role doesn't match.
+
+### Auth DTOs (`lib/dto/auth.dto.ts`)
+- `registerDto` — email, password, role, first_name, last_name, phone?
+- `loginDto` — email, password
+
+### Auth Service (`lib/services/auth.service.ts`)
+- `register(dto)` — creates user, returns `{ user, token }`
+- `login(dto)` — validates credentials, returns `{ user, token }`
+- `me(payload)` — returns current user (password stripped)
+
+### Auth Routes
+- `POST /api/auth/register` — public, creates user + returns JWT
+- `POST /api/auth/login` — public, returns JWT
+- `GET /api/auth/me` — protected, returns current user
+
+### Proxy (`proxy.ts`)
+- All `/api/*` routes require `Authorization: Bearer` header
+- Except public routes: `/api/auth/login`, `/api/auth/register`
+- Proxy only checks header presence; actual JWT verification happens in route handlers via `getAuth()` / `requireRole()`
+
+### Usage in Protected Routes
+```ts
+import { handler, validate } from "@/lib/helpers/controller";
+import { getAuth, requireRole } from "@/lib/helpers/auth";
+import * as res from "@/lib/helpers/api-response";
+
+// Any authenticated user
+export const GET = handler(async (req) => {
+  const auth = getAuth(req);  // { userId, email, role }
+  // ...
+});
+
+// Only specific roles
+export const POST = handler(async (req) => {
+  const auth = requireRole(req, "admin", "advisor");
+  // ...
+});
+```
+
 ## User Roles & Permissions
 
 | Role | Can Do |

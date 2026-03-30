@@ -1,17 +1,8 @@
 import { userRepository } from "@/lib/repositories/user.repository";
 import { ApiError } from "@/lib/helpers/api-error";
+import { hashPassword } from "@/lib/helpers/auth";
 import type { CreateUserDto, UpdateUserDto } from "@/lib/dto/user.dto";
 import type { UserRole } from "@/lib/types/db";
-
-// In production, use bcrypt. This is a placeholder.
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hash = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(hash))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
 
 export const userService = {
   async getAll(limit?: number, offset?: number) {
