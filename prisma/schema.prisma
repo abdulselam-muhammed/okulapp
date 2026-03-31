@@ -1,0 +1,374 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+// ─── USERS & AUTH ─────────────────────────────────────────
+
+model User {
+  id               Int       @id @default(autoincrement())
+  email            String    @unique @db.VarChar(255)
+  password_hash    String    @db.VarChar(255)
+  role             UserRole
+  first_name       String    @db.VarChar(100)
+  last_name        String    @db.VarChar(100)
+  phone            String?   @db.VarChar(20)
+  avatar_url       String?   @db.VarChar(500)
+  latitude         Decimal?  @db.Decimal(10, 7)
+  longitude        Decimal?  @db.Decimal(10, 7)
+  reliability_score Decimal  @default(0.50) @db.Decimal(3, 2)
+  is_active        Boolean   @default(true)
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+
+  // Relations
+  feeding_points_created FeedingPoint[]
+  refills_done           FeedingPointRefill[] @relation("volunteer_refills")
+  refills_approved       FeedingPointRefill[] @relation("advisor_approves")
+  reports                Report[]
+  tasks_assigned_by      Task[]               @relation("advisor_assigns")
+  tasks_assigned_to      Task[]               @relation("volunteer_executes")
+  task_evidence          TaskEvidence[]
+  vet_availability       VetAvailability?
+  vet_cases              VetCase[]
+  donations              Donation[]
+  purchases              Purchase[]
+  notifications          Notification[]
+  settings_updated       SystemSetting[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  admin
+  advisor
+  volunteer
+  vet
+  user
+}
+
+// ─── FEEDING POINTS ───────────────────────────────────────
+
+model FeedingPoint {
+  id             Int       @id @default(autoincrement())
+  name           String    @db.VarChar(150)
+  latitude       Decimal   @db.Decimal(10, 7)
+  longitude      Decimal   @db.Decimal(10, 7)
+  description    String?   @db.Text
+  status         FeedingPointStatus @default(active)
+  last_refill_at DateTime?
+  created_by     Int
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @updatedAt
+
+  // Relations
+  creator  User                 @relation(fields: [created_by], references: [id], onDelete: Cascade)
+  refills  FeedingPointRefill[]
+
+  @@map("feeding_points")
+}
+
+enum FeedingPointStatus {
+  active
+  needs_refill
+  inactive
+}
+
+model FeedingPointRefill {
+  id               Int       @id @default(autoincrement())
+  feeding_point_id Int
+  volunteer_id     Int
+  refill_type      RefillType
+  note             String?   @db.Text
+  photo_url        String?   @db.VarChar(500)
+  status           RefillStatus @default(pending)
+  approved_by      Int?
+  created_at       DateTime  @default(now())
+
+  // Relations
+  feeding_point FeedingPoint @relation(fields: [feeding_point_id], references: [id], onDelete: Cascade)
+  volunteer     User         @relation("volunteer_refills", fields: [volunteer_id], references: [id], onDelete: Cascade)
+  approver      User?        @relation("advisor_approves", fields: [approved_by], references: [id], onDelete: SetNull)
+
+  @@map("feeding_point_refills")
+}
+
+enum RefillType {
+  food
+  water
+  both
+}
+
+enum RefillStatus {
+  pending
+  approved
+  rejected
+}
+
+// ─── REPORTS ──────────────────────────────────────────────
+
+model Report {
+  id              Int          @id @default(autoincrement())
+  reporter_id     Int
+  type            ReportType
+  description     String       @db.Text
+  latitude        Decimal      @db.Decimal(10, 7)
+  longitude       Decimal      @db.Decimal(10, 7)
+  address         String?      @db.VarChar(500)
+  photo_url       String?      @db.VarChar(500)
+  priority        Priority     @default(medium)
+  status          ReportStatus @default(pending)
+  correction_note String?      @db.Text
+  created_at      DateTime     @default(now())
+  updated_at      DateTime     @updatedAt
+
+  // Relations
+  reporter User     @relation(fields: [reporter_id], references: [id], onDelete: Cascade)
+  animal   Animal?
+  tasks    Task[]
+
+  @@map("reports")
+}
+
+enum ReportType {
+  injured_animal
+  feeding_point
+}
+
+enum Priority {
+  low
+  medium
+  high
+  urgent
+}
+
+enum ReportStatus {
+  pending
+  approved
+  assigned
+  in_progress
+  completed
+  rejected
+  needs_correction
+}
+
+// ─── ANIMALS ──────────────────────────────────────────────
+
+model Animal {
+  id              Int             @id @default(autoincrement())
+  report_id       Int             @unique
+  species         String?         @db.VarChar(100)
+  description     String?         @db.Text
+  condition_level AnimalCondition @default(moderate)
+  photo_url       String?         @db.VarChar(500)
+  status          AnimalStatus    @default(reported)
+  created_at      DateTime        @default(now())
+  updated_at      DateTime        @updatedAt
+
+  // Relations
+  report    Report    @relation(fields: [report_id], references: [id], onDelete: Cascade)
+  vet_cases VetCase[]
+
+  @@map("animals")
+}
+
+enum AnimalCondition {
+  minor
+  moderate
+  severe
+  critical
+}
+
+enum AnimalStatus {
+  reported
+  in_rescue
+  at_vet
+  treated
+  released
+  deceased
+}
+
+// ─── TASKS ────────────────────────────────────────────────
+
+model Task {
+  id               Int        @id @default(autoincrement())
+  report_id        Int?
+  assigned_by      Int?
+  assigned_to      Int?
+  type             TaskType
+  status           TaskStatus @default(pending)
+  priority         Priority   @default(medium)
+  notes            String?    @db.Text
+  rejection_reason String?    @db.Text
+  deadline         DateTime?
+  started_at       DateTime?
+  completed_at     DateTime?
+  created_at       DateTime   @default(now())
+  updated_at       DateTime   @updatedAt
+
+  // Relations
+  report    Report?        @relation(fields: [report_id], references: [id], onDelete: SetNull)
+  advisor   User?          @relation("advisor_assigns", fields: [assigned_by], references: [id], onDelete: SetNull)
+  volunteer User?          @relation("volunteer_executes", fields: [assigned_to], references: [id], onDelete: SetNull)
+  evidence  TaskEvidence[]
+  vet_cases VetCase[]
+
+  @@map("tasks")
+}
+
+enum TaskType {
+  rescue
+  feeding
+  vet_transport
+  other
+}
+
+enum TaskStatus {
+  pending
+  accepted
+  rejected
+  in_progress
+  completed
+  cancelled
+}
+
+model TaskEvidence {
+  id          Int      @id @default(autoincrement())
+  task_id     Int
+  uploaded_by Int
+  photo_url   String   @db.VarChar(500)
+  description String?  @db.Text
+  created_at  DateTime @default(now())
+
+  // Relations
+  task     Task @relation(fields: [task_id], references: [id], onDelete: Cascade)
+  uploader User @relation(fields: [uploaded_by], references: [id], onDelete: Cascade)
+
+  @@map("task_evidence")
+}
+
+// ─── VET ──────────────────────────────────────────────────
+
+model VetAvailability {
+  id           Int         @id @default(autoincrement())
+  vet_id       Int         @unique
+  is_available Boolean     @default(true)
+  workload     VetWorkload @default(light)
+  note         String?     @db.Text
+  updated_at   DateTime    @updatedAt
+
+  // Relations
+  vet User @relation(fields: [vet_id], references: [id], onDelete: Cascade)
+
+  @@map("vet_availability")
+}
+
+enum VetWorkload {
+  light
+  moderate
+  heavy
+}
+
+model VetCase {
+  id         Int            @id @default(autoincrement())
+  animal_id  Int
+  vet_id     Int
+  task_id    Int?
+  diagnosis  String?        @db.Text
+  treatment  String?        @db.Text
+  outcome    VetCaseOutcome @default(ongoing)
+  notes      String?        @db.Text
+  created_at DateTime       @default(now())
+  updated_at DateTime       @updatedAt
+
+  // Relations
+  animal Animal @relation(fields: [animal_id], references: [id], onDelete: Cascade)
+  vet    User   @relation(fields: [vet_id], references: [id], onDelete: Cascade)
+  task   Task?  @relation(fields: [task_id], references: [id], onDelete: SetNull)
+
+  @@map("vet_cases")
+}
+
+enum VetCaseOutcome {
+  ongoing
+  recovered
+  released
+  deceased
+}
+
+// ─── DONATIONS & PURCHASES ───────────────────────────────
+
+model Donation {
+  id             Int      @id @default(autoincrement())
+  donor_id       Int
+  amount         Decimal  @db.Decimal(10, 2)
+  payment_method String?  @db.VarChar(50)
+  note           String?  @db.Text
+  created_at     DateTime @default(now())
+
+  // Relations
+  donor User @relation(fields: [donor_id], references: [id], onDelete: Cascade)
+
+  @@map("donations")
+}
+
+model Purchase {
+  id          Int      @id @default(autoincrement())
+  admin_id    Int
+  description String   @db.VarChar(500)
+  amount      Decimal  @db.Decimal(10, 2)
+  receipt_url String?  @db.VarChar(500)
+  created_at  DateTime @default(now())
+
+  // Relations
+  admin User @relation(fields: [admin_id], references: [id], onDelete: Cascade)
+
+  @@map("purchases")
+}
+
+// ─── NOTIFICATIONS ────────────────────────────────────────
+
+model Notification {
+  id           Int      @id @default(autoincrement())
+  user_id      Int
+  title        String   @db.VarChar(255)
+  message      String   @db.Text
+  type         NotificationType @default(system)
+  is_read      Boolean  @default(false)
+  related_type String?  @db.VarChar(50)
+  related_id   Int?
+  created_at   DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+enum NotificationType {
+  task_assigned
+  task_updated
+  report_status
+  donation
+  system
+  vet_request
+}
+
+// ─── SYSTEM SETTINGS ─────────────────────────────────────
+
+model SystemSetting {
+  id            Int      @id @default(autoincrement())
+  setting_key   String   @unique @db.VarChar(100)
+  setting_value String   @db.Text
+  updated_by    Int?
+  updated_at    DateTime @updatedAt
+
+  // Relations
+  updater User? @relation(fields: [updated_by], references: [id], onDelete: SetNull)
+
+  @@map("system_settings")
+}

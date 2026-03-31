@@ -6,7 +6,8 @@
       "Bash(npm install:*)",
       "Bash(npx tsx -e \":*)",
       "Bash(npx tsc:*)",
-      "Bash(curl -s -X POST http://localhost:3000/api/auth/register -H \"Content-Type: application/json\" -d '{\"\"\"\"email\"\"\"\":\"\"\"\"admin@test.com\"\"\"\",\"\"\"\"password\"\"\"\":\"\"\"\"123456\"\"\"\",\"\"\"\"role\"\"\"\":\"\"\"\"admin\"\"\"\",\"\"\"\"first_name\"\"\"\":\"\"\"\"Admin\"\"\"\",\"\"\"\"last_name\"\"\"\":\"\"\"\"User\"\"\"\"}')"
+      "Bash(curl -s -X POST http://localhost:3000/api/auth/register -H \"Content-Type: application/json\" -d '{\"\"\"\"email\"\"\"\":\"\"\"\"admin@test.com\"\"\"\",\"\"\"\"password\"\"\"\":\"\"\"\"123456\"\"\"\",\"\"\"\"role\"\"\"\":\"\"\"\"admin\"\"\"\",\"\"\"\"first_name\"\"\"\":\"\"\"\"Admin\"\"\"\",\"\"\"\"last_name\"\"\"\":\"\"\"\"User\"\"\"\"}')",
+      "Bash(npx prisma:*)"
     ]
   }
 }
