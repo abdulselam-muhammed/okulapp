@@ -1,0 +1,114 @@
+@startuml HayvanYardim_UseCases
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #F9F9F9
+  BorderColor #333333
+  ArrowColor #333333
+}
+
+title Hayvan Yardim - Use Case Diagram
+
+actor "Yönetici\n(Admin)" as Admin #FF6B6B
+actor "Danışman\n(Advisor)" as Advisor #4ECDC4
+actor "Gönüllü\n(Volunteer)" as Volunteer #45B7D1
+actor "Veteriner\n(Vet)" as Vet #96CEB4
+actor "Kullanıcı\n(User)" as User #DDA0DD
+
+rectangle "Hayvan Yardım Sistemi" {
+
+  ' === COMMON ===
+  usecase "Haritayı Görüntüle" as UC_MAP
+  usecase "Giriş Yap / Kayıt Ol" as UC_AUTH
+
+  ' === ADMIN ===
+  usecase "Kullanıcı & Rol Yönetimi" as UC_USER_MGMT
+  usecase "Bağışlarla Satın Alım Yap" as UC_PURCHASE
+  usecase "Sistem Ayarlarını Yönet" as UC_SETTINGS
+  usecase "Raporlama & İstatistik Görüntüle" as UC_STATS
+
+  ' === ADVISOR ===
+  usecase "Yemek-Su Bildirimini Onayla" as UC_APPROVE_REFILL
+  usecase "Gönüllüye Görev Ata" as UC_ASSIGN_TASK
+  usecase "Bildirimleri Önceliklendir" as UC_PRIORITIZE
+  usecase "Gönüllü Durumlarını Takip Et" as UC_TRACK_VOLUNTEER
+  usecase "Görev Çakışmalarını Engelle" as UC_PREVENT_CONFLICT
+  usecase "Bildirimi Düzeltmeye Gönder" as UC_SEND_CORRECTION
+  usecase "Görevleri Takip Et & Kapat" as UC_CLOSE_TASK
+
+  ' === VOLUNTEER ===
+  usecase "Yemek-Su Noktasını Yenile" as UC_REFILL
+  usecase "Yaralı Hayvan Bildir" as UC_REPORT_ANIMAL
+  usecase "Görevi Kabul Et / Reddet" as UC_ACCEPT_TASK
+  usecase "Hayvanı Veterinere Yetiştir" as UC_TRANSPORT_VET
+  usecase "Bağış Yap" as UC_DONATE
+  usecase "Konum Paylaş & Yakın Görev Al" as UC_NEARBY_TASK
+  usecase "Görev Durumunu Güncelle" as UC_UPDATE_TASK
+  usecase "Fotoğraf / Kanıt Ekle" as UC_ADD_EVIDENCE
+
+  ' === VET ===
+  usecase "Uygunluk Durumu Bildir" as UC_VET_AVAIL
+  usecase "Vaka Geri Bildirimi Gir" as UC_VET_FEEDBACK
+  usecase "Yoğunluk Bilgisi Sağla" as UC_VET_WORKLOAD
+
+  ' === USER ===
+  usecase "Bildirim Durumunu Takip Et" as UC_TRACK_REPORT
+}
+
+' === COMMON CONNECTIONS ===
+Admin --> UC_AUTH
+Advisor --> UC_AUTH
+Volunteer --> UC_AUTH
+Vet --> UC_AUTH
+User --> UC_AUTH
+
+Admin --> UC_MAP
+Advisor --> UC_MAP
+Volunteer --> UC_MAP
+Vet --> UC_MAP
+User --> UC_MAP
+
+' === ADMIN CONNECTIONS ===
+Admin --> UC_USER_MGMT
+Admin --> UC_PURCHASE
+Admin --> UC_SETTINGS
+Admin --> UC_STATS
+
+' === ADVISOR CONNECTIONS ===
+Advisor --> UC_APPROVE_REFILL
+Advisor --> UC_ASSIGN_TASK
+Advisor --> UC_PRIORITIZE
+Advisor --> UC_TRACK_VOLUNTEER
+Advisor --> UC_PREVENT_CONFLICT
+Advisor --> UC_SEND_CORRECTION
+Advisor --> UC_CLOSE_TASK
+
+' === VOLUNTEER CONNECTIONS ===
+Volunteer --> UC_REFILL
+Volunteer --> UC_REPORT_ANIMAL
+Volunteer --> UC_ACCEPT_TASK
+Volunteer --> UC_TRANSPORT_VET
+Volunteer --> UC_DONATE
+Volunteer --> UC_NEARBY_TASK
+Volunteer --> UC_UPDATE_TASK
+Volunteer --> UC_ADD_EVIDENCE
+
+' === VET CONNECTIONS ===
+Vet --> UC_VET_AVAIL
+Vet --> UC_VET_FEEDBACK
+Vet --> UC_VET_WORKLOAD
+
+' === USER CONNECTIONS ===
+User --> UC_REPORT_ANIMAL
+User --> UC_TRACK_REPORT
+
+' === RELATIONSHIPS ===
+UC_ASSIGN_TASK ..> UC_PREVENT_CONFLICT : <<include>>
+UC_ADD_EVIDENCE ..> UC_UPDATE_TASK : <<extend>>
+UC_REPORT_ANIMAL ..> UC_PRIORITIZE : <<include>>
+UC_REFILL ..> UC_APPROVE_REFILL : <<include>>
+UC_ACCEPT_TASK ..> UC_TRANSPORT_VET : <<extend>>
+
+@enduml
