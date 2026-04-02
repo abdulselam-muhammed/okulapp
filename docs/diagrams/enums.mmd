@@ -1,0 +1,118 @@
+classDiagram
+    direction LR
+
+    class UserRole {
+        <<enumeration>>
+        admin
+        advisor
+        volunteer
+        vet
+        user
+    }
+
+    class ReportType {
+        <<enumeration>>
+        injured_animal
+        feeding_point
+    }
+
+    class Priority {
+        <<enumeration>>
+        low
+        medium
+        high
+        urgent
+    }
+
+    class ReportStatus {
+        <<enumeration>>
+        pending
+        approved
+        assigned
+        in_progress
+        completed
+        rejected
+        needs_correction
+    }
+
+    class TaskStatus {
+        <<enumeration>>
+        pending
+        accepted
+        rejected
+        in_progress
+        completed
+        cancelled
+    }
+
+    class TaskType {
+        <<enumeration>>
+        rescue
+        feeding
+        vet_transport
+        other
+    }
+
+    class AnimalCondition {
+        <<enumeration>>
+        minor
+        moderate
+        severe
+        critical
+    }
+
+    class AnimalStatus {
+        <<enumeration>>
+        reported
+        in_rescue
+        at_vet
+        treated
+        released
+        deceased
+    }
+
+    class FeedingPointStatus {
+        <<enumeration>>
+        active
+        needs_refill
+        inactive
+    }
+
+    class RefillType {
+        <<enumeration>>
+        food
+        water
+        both
+    }
+
+    class RefillStatus {
+        <<enumeration>>
+        pending
+        approved
+        rejected
+    }
+
+    class VetWorkload {
+        <<enumeration>>
+        light
+        moderate
+        heavy
+    }
+
+    class VetCaseOutcome {
+        <<enumeration>>
+        ongoing
+        recovered
+        released
+        deceased
+    }
+
+    class NotificationType {
+        <<enumeration>>
+        task_assigned
+        task_updated
+        report_status
+        donation
+        system
+        vet_request
+    }

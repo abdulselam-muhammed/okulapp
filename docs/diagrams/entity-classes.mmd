@@ -1,0 +1,181 @@
+classDiagram
+    direction LR
+
+    class User {
+        +int id
+        +string email
+        +string password_hash
+        +UserRole role
+        +string first_name
+        +string last_name
+        +string phone
+        +string avatar_url
+        +decimal latitude
+        +decimal longitude
+        +decimal reliability_score
+        +boolean is_active
+        +datetime created_at
+        +datetime updated_at
+    }
+
+    class Report {
+        +int id
+        +int reporter_id
+        +ReportType type
+        +string description
+        +decimal latitude
+        +decimal longitude
+        +string address
+        +string photo_url
+        +Priority priority
+        +ReportStatus status
+        +string correction_note
+        +datetime created_at
+        +datetime updated_at
+    }
+
+    class Animal {
+        +int id
+        +int report_id
+        +string species
+        +string description
+        +AnimalCondition condition_level
+        +string photo_url
+        +AnimalStatus status
+        +datetime created_at
+        +datetime updated_at
+    }
+
+    class Task {
+        +int id
+        +int report_id
+        +int assigned_by
+        +int assigned_to
+        +TaskType type
+        +TaskStatus status
+        +Priority priority
+        +string notes
+        +string rejection_reason
+        +datetime deadline
+        +datetime started_at
+        +datetime completed_at
+        +datetime created_at
+        +datetime updated_at
+    }
+
+    class TaskEvidence {
+        +int id
+        +int task_id
+        +int uploaded_by
+        +string photo_url
+        +string description
+        +datetime created_at
+    }
+
+    class FeedingPoint {
+        +int id
+        +string name
+        +decimal latitude
+        +decimal longitude
+        +string description
+        +FeedingPointStatus status
+        +datetime last_refill_at
+        +int created_by
+        +datetime created_at
+        +datetime updated_at
+    }
+
+    class FeedingPointRefill {
+        +int id
+        +int feeding_point_id
+        +int volunteer_id
+        +RefillType refill_type
+        +string note
+        +string photo_url
+        +RefillStatus status
+        +int approved_by
+        +datetime created_at
+    }
+
+    class VetAvailability {
+        +int id
+        +int vet_id
+        +boolean is_available
+        +VetWorkload workload
+        +string note
+        +datetime updated_at
+    }
+
+    class VetCase {
+        +int id
+        +int animal_id
+        +int vet_id
+        +int task_id
+        +string diagnosis
+        +string treatment
+        +VetCaseOutcome outcome
+        +string notes
+        +datetime created_at
+        +datetime updated_at
+    }
+
+    class Donation {
+        +int id
+        +int donor_id
+        +decimal amount
+        +string payment_method
+        +string note
+        +datetime created_at
+    }
+
+    class Purchase {
+        +int id
+        +int admin_id
+        +string description
+        +decimal amount
+        +string receipt_url
+        +datetime created_at
+    }
+
+    class Notification {
+        +int id
+        +int user_id
+        +string title
+        +string message
+        +NotificationType type
+        +boolean is_read
+        +string related_type
+        +int related_id
+        +datetime created_at
+    }
+
+    class SystemSetting {
+        +int id
+        +string setting_key
+        +string setting_value
+        +int updated_by
+        +datetime updated_at
+    }
+
+    User "1" --> "*" Report : reports
+    User "1" --> "*" Task : atanan gorevler
+    User "1" --> "*" Task : atadigi gorevler
+    User "1" --> "*" FeedingPoint : olusturur
+    User "1" --> "*" FeedingPointRefill : doldurur
+    User "1" --> "*" Donation : bagis yapar
+    User "1" --> "*" Purchase : satin alir
+    User "1" --> "*" Notification : bildirim alir
+    User "1" --> "*" TaskEvidence : kanit yukler
+    User "1" --> "0..1" VetAvailability : musaitlik
+    User "1" --> "*" VetCase : vakalar
+    User "1" --> "*" SystemSetting : gunceller
+
+    Report "1" --> "0..1" Animal : hayvan kaydi
+    Report "1" --> "*" Task : gorev uretir
+
+    Task "1" --> "*" TaskEvidence : kanitlar
+    Task "1" --> "*" VetCase : bagli vakalar
+
+    Animal "1" --> "*" VetCase : veteriner vakalari
+
+    FeedingPoint "1" --> "*" FeedingPointRefill : dolumlar

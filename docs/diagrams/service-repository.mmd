@@ -1,0 +1,181 @@
+classDiagram
+    direction TB
+
+    class BaseRepository~T~ {
+        <<abstract>>
+        #string table
+        +findAll(limit, offset) T[]
+        +findById(id) T
+        +findWhere(conditions, limit, offset) T[]
+        +count(conditions) int
+        +create(data) int
+        +update(id, data) boolean
+        +delete(id) boolean
+        +query(sql, params) R[]
+        +execute(sql, params) ResultSetHeader
+    }
+
+    class UserRepository {
+        +findByEmail(email) UserRow
+        +findByRole(role, limit, offset) UserRow[]
+        +findActiveVolunteersNear(lat, lng, radiusKm, limit) UserRow[]
+        +updateReliability(userId, score) boolean
+    }
+
+    class ReportRepository {
+        +findByStatus(status, limit, offset) ReportRow[]
+        +findByReporter(reporterId, limit, offset) ReportRow[]
+        +findPending(limit, offset) ReportRow[]
+        +findNear(lat, lng, radiusKm, limit) ReportRow[]
+    }
+
+    class TaskRepository {
+        +findByVolunteer(volunteerId, status) TaskRow[]
+        +findActiveByVolunteer(volunteerId) TaskRow[]
+        +hasConflict(volunteerId) boolean
+    }
+
+    class FeedingPointRepository {
+        +findActive() FeedingPointRow[]
+        +findNeedingRefill() FeedingPointRow[]
+        +createRefill(data) int
+        +findRefillsByPoint(feedingPointId) RefillRow[]
+    }
+
+    class AnimalRepository {
+        +findByReport(reportId) AnimalRow
+        +findByStatus(status) AnimalRow[]
+    }
+
+    class VetRepository {
+        +findAvailableVets() VetAvailabilityRow[]
+        +upsertAvailability(vetId, data) void
+        +createCase(data) int
+        +findCasesByVet(vetId) VetCaseRow[]
+        +updateCase(caseId, data) boolean
+    }
+
+    class DonationRepository {
+        +totalDonations() number
+        +totalPurchases() number
+        +getBalance() number
+        +createPurchase(data) int
+    }
+
+    class NotificationRepository {
+        +findByUser(userId, unreadOnly, limit, offset) NotificationRow[]
+        +markAsRead(notificationId) boolean
+        +markAllAsRead(userId) void
+        +send(userId, title, message, type) int
+    }
+
+    class AuthService {
+        +register(dto) User + token
+        +login(dto) User + token
+        +me(payload) User
+    }
+
+    class UserService {
+        +getAll(limit, offset) UserRow[]
+        +getById(id) UserRow
+        +getByRole(role, limit, offset) UserRow[]
+        +create(dto) UserRow
+        +update(id, dto) UserRow
+        +delete(id) void
+        +updateLocation(id, lat, lng) void
+        +getNearbyVolunteers(lat, lng, radiusKm) UserRow[]
+    }
+
+    class ReportService {
+        +getAll(limit, offset) ReportRow[]
+        +getById(id) ReportRow
+        +getPending(limit, offset) ReportRow[]
+        +getByReporter(reporterId) ReportRow[]
+        +getNearby(lat, lng, radiusKm) ReportRow[]
+        +create(reporterId, dto) ReportRow
+        +updateStatus(id, dto) ReportRow
+    }
+
+    class TaskService {
+        +getAll(limit, offset) TaskRow[]
+        +getById(id) TaskRow
+        +getByVolunteer(volunteerId) TaskRow[]
+        +create(advisorId, dto) TaskRow
+        +updateStatus(taskId, userId, dto) TaskRow
+        +addEvidence(taskId, userId, photoUrl, desc) void
+    }
+
+    class FeedingPointService {
+        +getAll(limit, offset) FeedingPointRow[]
+        +getById(id) FeedingPointRow
+        +create(createdBy, dto) FeedingPointRow
+        +refill(feedingPointId, volunteerId, dto) int
+        +approveRefill(refillId, advisorId) void
+        +getRefills(feedingPointId) RefillRow[]
+    }
+
+    class VetService {
+        +getAvailableVets() VetAvailabilityRow[]
+        +updateAvailability(vetId, dto) void
+        +createCase(vetId, dto) int
+        +updateCase(caseId, dto) void
+        +getCasesByVet(vetId) VetCaseRow[]
+    }
+
+    class DonationService {
+        +getAll(limit, offset) DonationRow[]
+        +getBalance() number
+        +donate(donorId, dto) DonationRow
+        +purchase(adminId, dto) int
+    }
+
+    class ApiError {
+        +int statusCode
+        +string message
+        +unknown details
+        +badRequest(msg, details)$ ApiError
+        +unauthorized(msg)$ ApiError
+        +forbidden(msg)$ ApiError
+        +notFound(msg)$ ApiError
+        +conflict(msg)$ ApiError
+        +internal(msg)$ ApiError
+    }
+
+    class AuthHelper {
+        <<utility>>
+        +hashPassword(password)$ string
+        +comparePassword(password, hash)$ boolean
+        +signToken(payload)$ string
+        +verifyToken(token)$ JwtPayload
+        +getAuth(req)$ JwtPayload
+        +requireRole(req, roles)$ JwtPayload
+    }
+
+    BaseRepository~T~ <|-- UserRepository
+    BaseRepository~T~ <|-- ReportRepository
+    BaseRepository~T~ <|-- TaskRepository
+    BaseRepository~T~ <|-- FeedingPointRepository
+    BaseRepository~T~ <|-- AnimalRepository
+    BaseRepository~T~ <|-- VetRepository
+    BaseRepository~T~ <|-- DonationRepository
+    BaseRepository~T~ <|-- NotificationRepository
+
+    AuthService --> UserRepository : uses
+    AuthService --> AuthHelper : uses
+    UserService --> UserRepository : uses
+    ReportService --> ReportRepository : uses
+    ReportService --> AnimalRepository : uses
+    ReportService --> NotificationRepository : uses
+    TaskService --> TaskRepository : uses
+    TaskService --> NotificationRepository : uses
+    FeedingPointService --> FeedingPointRepository : uses
+    VetService --> VetRepository : uses
+    DonationService --> DonationRepository : uses
+
+    AuthService ..> ApiError : throws
+    UserService ..> ApiError : throws
+    ReportService ..> ApiError : throws
+    TaskService ..> ApiError : throws
+    FeedingPointService ..> ApiError : throws
+    VetService ..> ApiError : throws
+    DonationService ..> ApiError : throws
