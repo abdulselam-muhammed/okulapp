@@ -5,18 +5,24 @@ import Script from "next/script";
 
 export default function DocsPage() {
   const initialized = useRef(false);
+  const bundleLoaded = useRef(false);
+  const presetLoaded = useRef(false);
 
-  function initSwagger() {
+  function tryInit() {
     if (initialized.current) return;
-    if (!(window as any).SwaggerUIBundle) return;
+    if (!bundleLoaded.current || !presetLoaded.current) return;
+
+    const win = window as any;
+    if (!win.SwaggerUIBundle || !win.SwaggerUIStandalonePreset) return;
+
     initialized.current = true;
 
-    (window as any).SwaggerUIBundle({
+    win.SwaggerUIBundle({
       url: "/api/docs",
       dom_id: "#swagger-ui",
       presets: [
-        (window as any).SwaggerUIBundle.presets.apis,
-        (window as any).SwaggerUIStandalonePreset,
+        win.SwaggerUIBundle.presets.apis,
+        win.SwaggerUIStandalonePreset,
       ],
       layout: "StandaloneLayout",
       deepLinking: true,
@@ -25,8 +31,7 @@ export default function DocsPage() {
   }
 
   useEffect(() => {
-    // Try init in case scripts already loaded
-    initSwagger();
+    tryInit();
   }, []);
 
   return (
@@ -34,12 +39,18 @@ export default function DocsPage() {
       <Script
         src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"
         strategy="afterInteractive"
-        onLoad={initSwagger}
+        onLoad={() => {
+          bundleLoaded.current = true;
+          tryInit();
+        }}
       />
       <Script
         src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-standalone-preset.js"
         strategy="afterInteractive"
-        onLoad={initSwagger}
+        onLoad={() => {
+          presetLoaded.current = true;
+          tryInit();
+        }}
       />
       {/* eslint-disable-next-line @next/next/no-css-tags */}
       <link
