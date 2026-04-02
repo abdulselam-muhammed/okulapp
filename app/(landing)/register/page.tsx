@@ -1,10 +1,8 @@
-import { LandingTemplate } from "@/components/templates";
 import { RegisterForm } from "@/components/organisms";
 
 export default function RegisterPage() {
   return (
-    <LandingTemplate>
-      <main className="flex-grow flex items-center justify-center px-6 pt-32 pb-20">
+    <main className="flex-grow flex items-center justify-center px-6 pt-32 pb-20">
         <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Branding Column */}
           <div className="hidden lg:block space-y-8 pr-12">
@@ -34,6 +32,5 @@ export default function RegisterPage() {
           <RegisterForm />
         </div>
       </main>
-    </LandingTemplate>
   );
 }
