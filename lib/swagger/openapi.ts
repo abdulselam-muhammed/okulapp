@@ -433,7 +433,7 @@ export const openApiSpec = {
           "404": { description: "User not found" },
         },
       },
-      patch: {
+      put: {
         tags: ["Users"],
         summary: "Update a user",
         parameters: [
@@ -448,6 +448,9 @@ export const openApiSpec = {
                   first_name: { type: "string" },
                   last_name: { type: "string" },
                   phone: { type: "string" },
+                  avatar_url: { type: "string", format: "uri" },
+                  latitude: { type: "number" },
+                  longitude: { type: "number" },
                   is_active: { type: "boolean" },
                 },
               },
@@ -468,6 +471,49 @@ export const openApiSpec = {
         responses: {
           "204": { description: "User deleted" },
           "404": { description: "User not found" },
+        },
+      },
+    },
+    "/api/users/{id}/location": {
+      put: {
+        tags: ["Users"],
+        summary: "Update own GPS location",
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "integer" } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["latitude", "longitude"],
+                properties: {
+                  latitude: { type: "number", example: 39.9208 },
+                  longitude: { type: "number", example: 32.8541 },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "Location updated" },
+          "403": { description: "Can only update own location" },
+        },
+      },
+    },
+    "/api/users/nearby-volunteers": {
+      get: {
+        tags: ["Users"],
+        summary: "Find nearby volunteers (admin/advisor)",
+        parameters: [
+          { name: "lat", in: "query", required: true, schema: { type: "number" } },
+          { name: "lng", in: "query", required: true, schema: { type: "number" } },
+          { name: "radius", in: "query", schema: { type: "number", default: 10 }, description: "Radius in km" },
+        ],
+        responses: {
+          "200": { description: "Nearby volunteers list" },
+          "400": { description: "Missing lat/lng" },
         },
       },
     },
@@ -531,9 +577,11 @@ export const openApiSpec = {
           "404": { description: "Report not found" },
         },
       },
+    },
+    "/api/reports/{id}/status": {
       patch: {
         tags: ["Reports"],
-        summary: "Update report status (advisor only)",
+        summary: "Update report status (admin/advisor)",
         parameters: [
           { name: "id", in: "path", required: true, schema: { type: "integer" } },
         ],
@@ -549,6 +597,34 @@ export const openApiSpec = {
           "200": { description: "Report status updated" },
           "403": { description: "Forbidden" },
           "404": { description: "Report not found" },
+        },
+      },
+    },
+    "/api/reports/pending": {
+      get: {
+        tags: ["Reports"],
+        summary: "List pending reports sorted by priority (admin/advisor)",
+        parameters: [
+          { name: "limit", in: "query", schema: { type: "integer", default: 50 } },
+          { name: "offset", in: "query", schema: { type: "integer", default: 0 } },
+        ],
+        responses: {
+          "200": { description: "Pending reports list" },
+        },
+      },
+    },
+    "/api/reports/nearby": {
+      get: {
+        tags: ["Reports"],
+        summary: "Find nearby reports by GPS coordinates",
+        parameters: [
+          { name: "lat", in: "query", required: true, schema: { type: "number" } },
+          { name: "lng", in: "query", required: true, schema: { type: "number" } },
+          { name: "radius", in: "query", schema: { type: "number", default: 10 }, description: "Radius in km" },
+        ],
+        responses: {
+          "200": { description: "Nearby reports list" },
+          "400": { description: "Missing lat/lng" },
         },
       },
     },
@@ -608,6 +684,8 @@ export const openApiSpec = {
           "404": { description: "Task not found" },
         },
       },
+    },
+    "/api/tasks/{id}/status": {
       patch: {
         tags: ["Tasks"],
         summary: "Update task status (volunteer accepts/rejects/completes)",
@@ -625,6 +703,18 @@ export const openApiSpec = {
         responses: {
           "200": { description: "Task status updated" },
           "404": { description: "Task not found" },
+        },
+      },
+    },
+    "/api/tasks/volunteer/{volunteerId}": {
+      get: {
+        tags: ["Tasks"],
+        summary: "Get tasks assigned to a specific volunteer",
+        parameters: [
+          { name: "volunteerId", in: "path", required: true, schema: { type: "integer" } },
+        ],
+        responses: {
+          "200": { description: "Volunteer's task list" },
         },
       },
     },
@@ -694,6 +784,31 @@ export const openApiSpec = {
         },
       },
     },
+    "/api/feeding-points/{id}": {
+      get: {
+        tags: ["Feeding Points"],
+        summary: "Get feeding point by ID",
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "integer" } },
+        ],
+        responses: {
+          "200": { description: "Feeding point found" },
+          "404": { description: "Feeding point not found" },
+        },
+      },
+    },
+    "/api/feeding-points/{id}/refills": {
+      get: {
+        tags: ["Feeding Points"],
+        summary: "Get refill history for a feeding point",
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "integer" } },
+        ],
+        responses: {
+          "200": { description: "Refill history" },
+        },
+      },
+    },
     "/api/feeding-points/{id}/refill": {
       post: {
         tags: ["Feeding Points"],
@@ -711,6 +826,19 @@ export const openApiSpec = {
         },
         responses: {
           "201": { description: "Refill submitted for approval" },
+        },
+      },
+    },
+
+    "/api/feeding-points/refills/{refillId}/approve": {
+      patch: {
+        tags: ["Feeding Points"],
+        summary: "Approve a refill request (admin/advisor)",
+        parameters: [
+          { name: "refillId", in: "path", required: true, schema: { type: "integer" } },
+        ],
+        responses: {
+          "200": { description: "Refill approved" },
         },
       },
     },
@@ -851,6 +979,19 @@ export const openApiSpec = {
         responses: {
           "200": { description: "Vet case updated" },
           "404": { description: "Vet case not found" },
+        },
+      },
+    },
+
+    "/api/vet/cases/vet/{vetId}": {
+      get: {
+        tags: ["Vet"],
+        summary: "Get cases by specific vet (admin/advisor/vet)",
+        parameters: [
+          { name: "vetId", in: "path", required: true, schema: { type: "integer" } },
+        ],
+        responses: {
+          "200": { description: "Vet case list" },
         },
       },
     },

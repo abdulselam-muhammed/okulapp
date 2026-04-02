@@ -5,11 +5,12 @@ import * as res from "./api-response";
 /**
  * Wraps a route handler with error handling.
  * Catches ApiError and ZodError, returns standardized responses.
+ * Supports both simple handlers (req) and dynamic route handlers (req, ctx).
  */
-export function handler(fn: (req: Request) => Promise<Response>) {
-  return async (req: Request) => {
+export function handler(fn: (req: Request, ctx?: any) => Promise<Response>) {
+  return async (req: Request, ctx?: any) => {
     try {
-      return await fn(req);
+      return await fn(req, ctx);
     } catch (err) {
       if (err instanceof ZodError) {
         return res.error(
