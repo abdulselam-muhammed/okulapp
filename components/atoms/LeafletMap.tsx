@@ -11,7 +11,7 @@ export interface MapMarker {
   label: string;
   detail?: string;
   color: "green" | "red" | "blue" | "orange" | "gray";
-  type?: "circle" | "pin";
+  type?: "circle" | "pin" | "task";
 }
 
 interface LeafletMapProps {
@@ -32,7 +32,7 @@ const COLORS: Record<string, string> = {
   gray: "#888888",
 };
 
-function createIcon(color: string, type: "circle" | "pin" = "circle") {
+function createIcon(color: string, type: "circle" | "pin" | "task" = "circle") {
   if (type === "pin") {
     return L.divIcon({
       className: "",
@@ -44,6 +44,23 @@ function createIcon(color: string, type: "circle" | "pin" = "circle") {
       iconSize: [32, 32],
       iconAnchor: [16, 32],
       popupAnchor: [0, -32],
+    });
+  }
+
+  if (type === "task") {
+    return L.divIcon({
+      className: "",
+      html: `<div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
+        <svg viewBox="0 0 24 24" width="36" height="36" fill="${color}" stroke="white" stroke-width="1.2">
+          <path d="M14.4 6l-.24-1.2c-.09-.46-.5-.8-.98-.8H6.82c-.48 0-.89.34-.98.8L5.6 6H14.4zM5 7l.84 9.26c.08.87.81 1.54 1.69 1.54h4.94c.88 0 1.61-.67 1.69-1.54L15 7H5zm6.5-5h-3c-.28 0-.5.22-.5.5s.22.5.5.5h3c.28 0 .5-.22.5-.5s-.22-.5-.5-.5z"/>
+          <path d="M20 7h-4l-1-1h-2l2 2h5v2h-1l-1 10H7L6 10H5V8h5L8 6H6L5 7H1v2h3l1 10c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2l1-10h3V7z" fill="none"/>
+          <circle cx="10" cy="12" r="5" fill="${color}" stroke="white" stroke-width="2"/>
+          <path d="M8.5 12l1 1 2.5-2.5" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>`,
+      iconSize: [36, 36],
+      iconAnchor: [18, 18],
+      popupAnchor: [0, -20],
     });
   }
 

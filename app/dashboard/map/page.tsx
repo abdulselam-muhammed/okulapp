@@ -140,7 +140,7 @@ export default function MapPage() {
         label: `${task.type.replace("_", " ")} Task #${task.id}`,
         detail: `Priority: ${task.priority.toUpperCase()} — Status: ${task.status.replace("_", " ")}${task.notes ? "\n" + task.notes.replace(/\s*\[Location:.*\]/, "") : ""}`,
         color: priorityColor[task.priority] || "orange",
-        type: "pin",
+        type: "task",
       });
     });
 
