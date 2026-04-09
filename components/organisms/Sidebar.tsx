@@ -7,9 +7,12 @@ import { Icon, Button } from "@/components/atoms";
 const NAV_ITEMS = [
   { href: "/dashboard", icon: "dashboard", label: "Dashboard" },
   { href: "/dashboard/users", icon: "group", label: "Users" },
-  { href: "/dashboard/logs", icon: "list_alt", label: "Activity Logs" },
+  { href: "/dashboard/roles", icon: "security", label: "Roles" },
+  { href: "/dashboard/vets", icon: "medical_services", label: "Veterinarians" },
   { href: "/dashboard/donations", icon: "volunteer_activism", label: "Donations", filledIcon: true },
+  { href: "/dashboard/logs", icon: "list_alt", label: "Activity Logs" },
   { href: "/dashboard/map", icon: "map", label: "Task Map" },
+  { href: "/dashboard/profile", icon: "person", label: "Profile" },
 ];
 
 interface SidebarProps {
