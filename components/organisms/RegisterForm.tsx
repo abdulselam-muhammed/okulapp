@@ -111,7 +111,7 @@ export default function RegisterForm() {
       addToast("Account created successfully! Redirecting...", "success");
 
       setTimeout(() => {
-        router.push("/login");
+        router.push("/dashboard");
       }, 1000);
     } catch {
       addToast("Unable to connect to server. Please check your connection.", "error");

@@ -66,12 +66,7 @@ export default function LoginForm() {
 
       // Redirect after short delay so user sees the toast
       setTimeout(() => {
-        const role = data.data.user.role;
-        if (role === "admin") router.push("/admin");
-        else if (role === "advisor") router.push("/advisor");
-        else if (role === "volunteer") router.push("/volunteer");
-        else if (role === "vet") router.push("/vet");
-        else router.push("/dashboard");
+        router.push("/dashboard");
       }, 800);
     } catch {
       addToast("Unable to connect to server. Please check your connection.", "error");
