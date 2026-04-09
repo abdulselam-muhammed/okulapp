@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
+import L from "leaflet";
 import { Icon } from "@/components/atoms";
 import type { MapMarker } from "@/components/atoms/LeafletMap";
 import { useAuthStore, useToastStore, useVetsStore } from "@/lib/stores";
@@ -42,6 +43,11 @@ export default function MapPage() {
   const [feedingPoints, setFeedingPoints] = useState<FeedingPoint[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<{ display_name: string; lat: string; lon: string }[]>([]);
+  const [searching, setSearching] = useState(false);
+  const mapRef = useRef<L.Map | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!token) return;
@@ -111,6 +117,37 @@ export default function MapPage() {
     vetsOnMap: vets.filter((v) => v.latitude && v.longitude).length,
   };
 
+  function handleMapSearch(value: string) {
+    setSearchQuery(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (value.length < 3) { setSearchResults([]); return; }
+
+    debounceRef.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(value)}&limit=5`,
+          { headers: { "Accept-Language": "en" } }
+        );
+        setSearchResults(await res.json());
+      } catch {
+        setSearchResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 400);
+  }
+
+  function flyToResult(result: { lat: string; lon: string; display_name: string }) {
+    const lat = parseFloat(result.lat);
+    const lng = parseFloat(result.lon);
+    if (mapRef.current) {
+      mapRef.current.flyTo([lat, lng], 16, { duration: 1.5 });
+    }
+    setSearchQuery(result.display_name);
+    setSearchResults([]);
+  }
+
   return (
     <div className="relative w-full h-[calc(100vh-4rem)] overflow-hidden bg-surface-container">
       {/* Map */}
@@ -123,8 +160,45 @@ export default function MapPage() {
             </div>
           </div>
         ) : (
-          <LeafletMap markers={markers} height="100%" />
+          <LeafletMap markers={markers} height="100%" onMapReady={(map) => { mapRef.current = map; }} />
         )}
+      </div>
+
+      {/* Search Bar (Top Left) */}
+      <div className="absolute top-6 left-6 z-[1000] w-80">
+        <div className="relative">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Icon name="search" className="text-on-surface-variant text-lg" />
+            </div>
+            <input
+              className="w-full pl-11 pr-10 py-3 bg-surface-container-lowest/95 backdrop-blur-md border-none rounded-xl font-body text-sm text-on-surface focus:ring-2 focus:ring-primary/30 placeholder:text-on-surface-variant/50 shadow-lg transition-all"
+              placeholder="Search location..."
+              value={searchQuery}
+              onChange={(e) => handleMapSearch(e.target.value)}
+            />
+            {searching && (
+              <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
+                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+          </div>
+
+          {searchResults.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-surface-container-lowest rounded-xl shadow-2xl border border-outline-variant/10 overflow-hidden">
+              {searchResults.map((r, i) => (
+                <button
+                  key={i}
+                  onClick={() => flyToResult(r)}
+                  className="w-full text-left px-4 py-3 hover:bg-surface-container-low transition-colors flex items-start gap-3 border-b border-outline-variant/5 last:border-0"
+                >
+                  <Icon name="location_on" className="text-primary text-lg mt-0.5 shrink-0" />
+                  <span className="text-xs text-on-surface leading-relaxed line-clamp-2">{r.display_name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Legend (Bottom Center) */}

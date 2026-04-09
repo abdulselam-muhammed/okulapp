@@ -21,6 +21,7 @@ interface LeafletMapProps {
   height?: string;
   onClick?: (lat: number, lng: number) => void;
   selectedPosition?: { lat: number; lng: number } | null;
+  onMapReady?: (map: L.Map) => void;
 }
 
 const COLORS: Record<string, string> = {
@@ -62,6 +63,7 @@ export default function LeafletMap({
   height = "100%",
   onClick,
   selectedPosition,
+  onMapReady,
 }: LeafletMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -87,6 +89,8 @@ export default function LeafletMap({
 
     markersLayerRef.current = L.layerGroup().addTo(map);
     mapInstanceRef.current = map;
+
+    if (onMapReady) onMapReady(map);
 
     if (onClick) {
       map.on("click", (e: L.LeafletMouseEvent) => {
