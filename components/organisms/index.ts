@@ -8,3 +8,4 @@ export { default as TopBar } from "./TopBar";
 export { default as AddUserModal } from "./AddUserModal";
 export { default as AddVetModal } from "./AddVetModal";
 export { default as EditAvailabilityModal } from "./EditAvailabilityModal";
+export { default as AddTaskModal } from "./AddTaskModal";

@@ -34,7 +34,7 @@ export const taskService = {
       type: dto.type,
       priority: dto.priority ?? "medium",
       notes: dto.notes ?? null,
-      deadline: dto.deadline ?? null,
+      deadline: dto.deadline ? new Date(dto.deadline) : null,
     });
 
     // Notify volunteer

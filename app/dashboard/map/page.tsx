@@ -4,8 +4,9 @@ import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
 import L from "leaflet";
 import { Icon } from "@/components/atoms";
+import { AddTaskModal } from "@/components/organisms";
 import type { MapMarker } from "@/components/atoms/LeafletMap";
-import { useAuthStore, useToastStore, useVetsStore } from "@/lib/stores";
+import { useAuthStore, useToastStore, useVetsStore, useTasksStore } from "@/lib/stores";
 
 const LeafletMap = dynamic(() => import("@/components/atoms/LeafletMap"), { ssr: false });
 
@@ -39,10 +40,14 @@ export default function MapPage() {
   const token = useAuthStore((s) => s.token);
   const addToast = useToastStore((s) => s.addToast);
   const { vets, fetchVets, getAvailability } = useVetsStore();
+  const { tasks: storeTasks, fetchTasks } = useTasksStore();
 
   const [feedingPoints, setFeedingPoints] = useState<FeedingPoint[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAddTask, setShowAddTask] = useState(false);
+  const [taskLat, setTaskLat] = useState<number | null>(null);
+  const [taskLng, setTaskLng] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<{ display_name: string; lat: string; lon: string }[]>([]);
   const [searching, setSearching] = useState(false);
@@ -68,10 +73,16 @@ export default function MapPage() {
     }
   }, [token, addToast]);
 
+  // Sync store tasks into local state
+  useEffect(() => {
+    if (storeTasks.length > 0) setTasks(storeTasks);
+  }, [storeTasks]);
+
   useEffect(() => {
     fetchData();
     fetchVets();
-  }, [fetchData, fetchVets]);
+    fetchTasks();
+  }, [fetchData, fetchVets, fetchTasks]);
 
   // Build markers from all data sources
   const markers: MapMarker[] = useMemo(() => {
@@ -106,8 +117,35 @@ export default function MapPage() {
       });
     });
 
+    // Tasks with location in notes
+    tasks.forEach((task) => {
+      const locMatch = task.notes?.match(/\[Location:\s*([-\d.]+),\s*([-\d.]+)\]/);
+      if (!locMatch) return;
+
+      const taskLat = parseFloat(locMatch[1]);
+      const taskLng = parseFloat(locMatch[2]);
+      if (isNaN(taskLat) || isNaN(taskLng)) return;
+
+      const priorityColor: Record<string, "red" | "orange" | "blue" | "green"> = {
+        urgent: "red",
+        high: "orange",
+        medium: "blue",
+        low: "green",
+      };
+
+      result.push({
+        id: `task-${task.id}`,
+        lat: taskLat,
+        lng: taskLng,
+        label: `${task.type.replace("_", " ")} Task #${task.id}`,
+        detail: `Priority: ${task.priority.toUpperCase()} — Status: ${task.status.replace("_", " ")}${task.notes ? "\n" + task.notes.replace(/\s*\[Location:.*\]/, "") : ""}`,
+        color: priorityColor[task.priority] || "orange",
+        type: "pin",
+      });
+    });
+
     return result;
-  }, [feedingPoints, vets, getAvailability]);
+  }, [feedingPoints, vets, getAvailability, tasks]);
 
   const pendingTasks = tasks.filter((t) => t.status === "pending" || t.status === "in_progress");
 
@@ -149,6 +187,14 @@ export default function MapPage() {
   }
 
   return (
+    <>
+    <AddTaskModal
+      open={showAddTask}
+      onClose={() => { setShowAddTask(false); setTaskLat(null); setTaskLng(null); }}
+      initialLat={taskLat}
+      initialLng={taskLng}
+    />
+
     <div className="relative w-full h-[calc(100vh-4rem)] overflow-hidden bg-surface-container">
       {/* Map */}
       <div className="absolute inset-0">
@@ -217,6 +263,11 @@ export default function MapPage() {
             <span className="w-3 h-3 rounded-full bg-[#3a647c]" />
             <span className="text-on-surface-variant font-medium">Vet ({stats.vetsOnMap})</span>
           </div>
+          <div className="w-px h-4 bg-outline-variant/30" />
+          <div className="flex items-center gap-2 text-xs">
+            <span className="w-3 h-3 rounded-full bg-[#815623]" />
+            <span className="text-on-surface-variant font-medium">Task ({tasks.filter((t) => t.notes?.match(/\[Location:/)).length})</span>
+          </div>
         </div>
       </div>
 
@@ -230,7 +281,14 @@ export default function MapPage() {
                 {pendingTasks.length}
               </span>
             </div>
-            <p className="text-xs text-on-surface-variant">Pending and in-progress tasks</p>
+            <p className="text-xs text-on-surface-variant mb-3">Pending and in-progress tasks</p>
+            <button
+              onClick={() => setShowAddTask(true)}
+              className="w-full py-2.5 bg-primary text-on-primary rounded-lg font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary-dim transition-all shadow-md"
+            >
+              <Icon name="add_task" className="text-lg" />
+              New Task
+            </button>
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -293,5 +351,6 @@ export default function MapPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

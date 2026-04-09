@@ -6,3 +6,5 @@ export { useUsersStore } from "./users.store";
 export type { UserItem } from "./users.store";
 export { useVetsStore } from "./vets.store";
 export type { VetUser, VetAvailability } from "./vets.store";
+export { useTasksStore } from "./tasks.store";
+export type { TaskItem } from "./tasks.store";
