@@ -276,7 +276,7 @@ export default function MapPage() {
         <div className="bg-surface-container-lowest/95 backdrop-blur-md rounded-2xl shadow-2xl h-full flex flex-col overflow-hidden">
           <div className="p-6 border-b border-surface-container">
             <div className="flex items-center justify-between mb-1">
-              <h3 className="text-lg font-headline font-bold text-on-surface">Active Tasks</h3>
+              <h3 className="text-lg font-headline font-bold text-on-surface">Activity in Map</h3>
               <span className="px-2.5 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full">
                 {pendingTasks.length}
               </span>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Icon, Button } from "@/components/atoms";
+import { Icon } from "@/components/atoms";
 
 const NAV_ITEMS = [
   { href: "/dashboard", icon: "dashboard", label: "Dashboard" },
@@ -10,8 +10,9 @@ const NAV_ITEMS = [
   { href: "/dashboard/roles", icon: "security", label: "Roles" },
   { href: "/dashboard/vets", icon: "medical_services", label: "Veterinarians" },
   { href: "/dashboard/donations", icon: "volunteer_activism", label: "Donations", filledIcon: true },
+  { href: "/dashboard/tasks", icon: "task_alt", label: "Tasks" },
   { href: "/dashboard/logs", icon: "list_alt", label: "Activity Logs" },
-  { href: "/dashboard/map", icon: "map", label: "Task Map" },
+  { href: "/dashboard/map", icon: "map", label: "Activity Map" },
   { href: "/dashboard/profile", icon: "person", label: "Profile" },
 ];
 
@@ -60,10 +61,6 @@ export default function Sidebar({ onLogout }: SidebarProps) {
 
       {/* Bottom Actions */}
       <div className="px-4 mt-auto space-y-1">
-        <Button variant="primary" fullWidth icon="add">
-          New Task
-        </Button>
-        <div className="mt-6" />
         <Link
           href="/dashboard/settings"
           className="text-slate-600 mx-2 px-4 py-3 mb-1 flex items-center gap-3 hover:bg-slate-200/50 rounded-xl transition-all"
