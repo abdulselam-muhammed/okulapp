@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Modal, Button } from "@/components/atoms";
-import { FormField, PasswordField, AddressPicker } from "@/components/molecules";
+import { FormField, PasswordField, MapPicker } from "@/components/molecules";
 import { useVetsStore, useToastStore } from "@/lib/stores";
 
 interface AddVetModalProps {
@@ -19,7 +19,6 @@ export default function AddVetModal({ open, onClose }: AddVetModalProps) {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [address, setAddress] = useState("");
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
@@ -30,7 +29,6 @@ export default function AddVetModal({ open, onClose }: AddVetModalProps) {
     setEmail("");
     setPhone("");
     setPassword("");
-    setAddress("");
     setLat(null);
     setLng(null);
   }
@@ -72,27 +70,22 @@ export default function AddVetModal({ open, onClose }: AddVetModalProps) {
         <FormField id="vet_phone" label="Phone (optional)" type="tel" placeholder="05551234567" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))} icon="phone" maxLength={20} />
         <PasswordField id="vet_password" label="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
 
-        <AddressPicker
-          label="Clinic / Office Address"
-          value={address}
-          onChange={(addr, latitude, longitude) => {
-            setAddress(addr);
-            setLat(latitude);
-            setLng(longitude);
+        <MapPicker
+          label="Clinic / Office Location"
+          lat={lat}
+          lng={lng}
+          onChange={(newLat, newLng) => {
+            if (newLat === 0 && newLng === 0) {
+              setLat(null);
+              setLng(null);
+            } else {
+              setLat(newLat);
+              setLng(newLng);
+            }
           }}
         />
 
-        {lat && lng && (
-          <div className="flex items-center gap-3 px-4 py-3 bg-primary/5 rounded-lg border border-primary/10">
-            <span className="material-symbols-outlined text-primary text-lg">pin_drop</span>
-            <div className="text-xs">
-              <p className="font-bold text-on-surface">{address}</p>
-              <p className="text-on-surface-variant">{lat.toFixed(6)}, {lng.toFixed(6)}</p>
-            </div>
-          </div>
-        )}
-
-        <p className="text-xs text-on-surface-variant italic">This user will be registered with the <strong>vet</strong> role. The address will be saved as their location on the map.</p>
+        <p className="text-xs text-on-surface-variant italic">This user will be registered with the <strong>vet</strong> role. Location will appear on the Task Map.</p>
 
         <div className="pt-2">
           <Button type="submit" fullWidth loading={loading} icon="person_add">Add Veterinarian</Button>
