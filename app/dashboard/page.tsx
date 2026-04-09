@@ -1,10 +1,10 @@
 "use client";
 
 import { Icon } from "@/components/atoms";
-import { useAuth } from "@/lib/hooks/useAuth";
+import { useAuthStore } from "@/lib/stores";
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const user = useAuthStore((s) => s.user);
 
   return (
     <div className="pt-24 px-10 pb-20 max-w-7xl mx-auto">

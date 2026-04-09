@@ -1,14 +1,30 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Sidebar, TopBar } from "@/components/organisms";
-import { useAuth } from "@/lib/hooks/useAuth";
+import { useAuthStore } from "@/lib/stores";
 
 export default function DashboardTemplate({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading, logout } = useAuth();
+  const router = useRouter();
+  const user = useAuthStore((s) => s.user);
+  const loading = useAuthStore((s) => s.loading);
+  const hydrate = useAuthStore((s) => s.hydrate);
+  const logout = useAuthStore((s) => s.logout);
+
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/login");
+    }
+  }, [loading, user, router]);
 
   if (loading || !user) {
     return (

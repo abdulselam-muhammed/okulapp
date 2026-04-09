@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
+import { GlobalToast } from "./global-toast";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-headline",
@@ -35,7 +36,10 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <GlobalToast />
+      </body>
     </html>
   );
 }

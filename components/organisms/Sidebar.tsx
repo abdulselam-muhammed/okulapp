@@ -6,6 +6,7 @@ import { Icon, Button } from "@/components/atoms";
 
 const NAV_ITEMS = [
   { href: "/dashboard", icon: "dashboard", label: "Dashboard" },
+  { href: "/dashboard/users", icon: "group", label: "Users" },
   { href: "/dashboard/logs", icon: "list_alt", label: "Activity Logs" },
   { href: "/dashboard/donations", icon: "volunteer_activism", label: "Donations", filledIcon: true },
   { href: "/dashboard/map", icon: "map", label: "Task Map" },

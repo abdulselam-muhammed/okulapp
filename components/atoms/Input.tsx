@@ -9,6 +9,7 @@ interface InputProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   icon?: string;
   required?: boolean;
+  maxLength?: number;
   rightElement?: React.ReactNode;
 }
 
@@ -21,6 +22,7 @@ export default function Input({
   onChange,
   icon,
   required = false,
+  maxLength,
   rightElement,
 }: InputProps) {
   return (
@@ -39,6 +41,7 @@ export default function Input({
         value={value}
         onChange={onChange}
         required={required}
+        maxLength={maxLength}
       />
       {rightElement && (
         <div className="absolute inset-y-0 right-0 pr-4 flex items-center">

@@ -7,4 +7,5 @@ export { default as TextLink } from "./TextLink";
 export { default as Select } from "./Select";
 export { default as Toast } from "./Toast";
 export { default as ToastContainer } from "./ToastContainer";
+export { default as Modal } from "./Modal";
 export type { ToastData } from "./Toast";

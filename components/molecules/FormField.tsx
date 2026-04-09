@@ -9,6 +9,7 @@ interface FormFieldProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   icon?: string;
   required?: boolean;
+  maxLength?: number;
 }
 
 export default function FormField({
@@ -20,6 +21,7 @@ export default function FormField({
   onChange,
   icon,
   required = false,
+  maxLength,
 }: FormFieldProps) {
   return (
     <div className="space-y-2">
@@ -33,6 +35,7 @@ export default function FormField({
         onChange={onChange}
         icon={icon}
         required={required}
+        maxLength={maxLength}
       />
     </div>
   );
