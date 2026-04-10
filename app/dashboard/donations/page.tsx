@@ -2,7 +2,9 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { Icon } from "@/components/atoms";
+import { InvoiceModal } from "@/components/organisms";
 import { useAuthStore, useToastStore } from "@/lib/stores";
+import { downloadInvoice, type InvoiceData } from "@/lib/helpers/invoice";
 
 interface Donation {
   id: number;
@@ -82,6 +84,19 @@ export default function DonationsPage() {
   const [balance, setBalance] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [invoiceData, setInvoiceData] = useState<InvoiceData | null>(null);
+
+  function toInvoiceData(d: Donation): InvoiceData {
+    return {
+      id: d.id,
+      donor_name: getDonorName(d),
+      donor_email: d.email ?? null,
+      amount: Number(d.amount),
+      payment_method: d.payment_method,
+      note: d.note,
+      created_at: d.created_at,
+    };
+  }
 
   const fetchData = useCallback(async () => {
     if (!token) return;
@@ -156,6 +171,9 @@ export default function DonationsPage() {
   }, [donations, balance]);
 
   return (
+    <>
+    <InvoiceModal open={!!invoiceData} onClose={() => setInvoiceData(null)} data={invoiceData} />
+
     <section className="pt-24 px-10 pb-20 max-w-7xl mx-auto space-y-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -236,12 +254,13 @@ export default function DonationsPage() {
                   <th className="px-8 py-6 text-xs font-bold uppercase tracking-widest">Payment</th>
                   <th className="px-8 py-6 text-xs font-bold uppercase tracking-widest">Note</th>
                   <th className="px-8 py-6 text-xs font-bold uppercase tracking-widest">Date</th>
+                  <th className="px-8 py-6 text-xs font-bold uppercase tracking-widest text-right">Invoice</th>
                 </tr>
               </thead>
               <tbody>
                 {donations.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-8 py-16 text-center text-on-surface-variant">
+                    <td colSpan={6} className="px-8 py-16 text-center text-on-surface-variant">
                       <Icon name="volunteer_activism" className="text-4xl text-on-surface-variant/30 mb-3 block" />
                       <p>No donations yet. Share the donate page to get started!</p>
                     </td>
@@ -282,6 +301,24 @@ export default function DonationsPage() {
                       </td>
                       <td className="px-8 py-5 text-sm text-on-surface-variant">
                         {new Date(donation.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-8 py-5 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => setInvoiceData(toInvoiceData(donation))}
+                            className="p-2 hover:bg-primary/10 rounded-full transition-all"
+                            title="View invoice"
+                          >
+                            <Icon name="receipt_long" className="text-stone-400 group-hover:text-primary text-lg" />
+                          </button>
+                          <button
+                            onClick={() => downloadInvoice(toInvoiceData(donation))}
+                            className="p-2 hover:bg-secondary/10 rounded-full transition-all"
+                            title="Download PDF"
+                          >
+                            <Icon name="download" className="text-stone-400 group-hover:text-secondary text-lg" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -350,5 +387,6 @@ export default function DonationsPage() {
         </div>
       </div>
     </section>
+    </>
   );
 }
