@@ -11,7 +11,8 @@
       "Bash(timeout 60 npx next build --webpack)",
       "Bash(ls \"c:/Users/bdals/OneDrive/Desktop/proje1/okulapp/app/\\(landing\\)/\")",
       "Bash(ls \"c:/Users/bdals/OneDrive/Desktop/proje1/okulapp/app/\\(landing\\)/donate/\")",
-      "Bash(node -e \"const s = require\\('stripe'\\); console.log\\(Object.keys\\(s.prototype || s\\)\\)\")"
+      "Bash(node -e \"const s = require\\('stripe'\\); console.log\\(Object.keys\\(s.prototype || s\\)\\)\")",
+      "Bash(npm run:*)"
     ]
   }
 }
