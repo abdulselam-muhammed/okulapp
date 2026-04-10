@@ -4,7 +4,7 @@ import type { CreateDonationDto, CreatePurchaseDto } from "@/lib/dto/donation.dt
 
 export const donationService = {
   async getAll(limit?: number, offset?: number) {
-    return donationRepository.findAll(limit, offset);
+    return donationRepository.findAllWithDonor(limit, offset);
   },
 
   async getBalance() {

@@ -19,9 +19,26 @@ export interface PurchaseRow extends RowDataPacket {
   created_at: Date;
 }
 
+export interface DonationWithDonor extends DonationRow {
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+}
+
 class DonationRepository extends BaseRepository<DonationRow> {
   constructor() {
     super("donations");
+  }
+
+  async findAllWithDonor(limit = 50, offset = 0): Promise<DonationWithDonor[]> {
+    return this.query<DonationWithDonor[]>(
+      `SELECT d.*, u.first_name, u.last_name, u.email
+       FROM donations d
+       LEFT JOIN users u ON u.id = d.donor_id
+       ORDER BY d.created_at DESC
+       LIMIT ? OFFSET ?`,
+      [limit, offset]
+    );
   }
 
   async totalDonations(): Promise<number> {
