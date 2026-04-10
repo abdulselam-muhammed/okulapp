@@ -8,6 +8,7 @@ import { Icon } from "@/components/atoms";
 import { AddTaskModal } from "@/components/organisms";
 import type { MapMarker } from "@/components/atoms/LeafletMap";
 import { useAuthStore, useToastStore, useVetsStore, useTasksStore } from "@/lib/stores";
+import { useAbility } from "@/lib/hooks/useAbility";
 
 const LeafletMap = dynamic(() => import("@/components/atoms/LeafletMap"), { ssr: false });
 
@@ -42,6 +43,9 @@ function MapPageContent() {
   const focusTaskId = searchParams.get("taskId");
   const token = useAuthStore((s) => s.token);
   const addToast = useToastStore((s) => s.addToast);
+  const ability = useAbility();
+  const canCreateTask = ability.can("create", "Task");
+  const canReadVet = ability.can("read", "Vet");
   const { vets, fetchVets, getAvailability } = useVetsStore();
   const { tasks: storeTasks, fetchTasks } = useTasksStore();
 
@@ -83,9 +87,9 @@ function MapPageContent() {
 
   useEffect(() => {
     fetchData();
-    fetchVets();
+    if (canReadVet) fetchVets();
     fetchTasks();
-  }, [fetchData, fetchVets, fetchTasks]);
+  }, [fetchData, fetchVets, fetchTasks, canReadVet]);
 
   // Fly to task location when ?taskId=X is in URL
   useEffect(() => {
@@ -306,13 +310,15 @@ function MapPageContent() {
               </span>
             </div>
             <p className="text-xs text-on-surface-variant mb-3">Pending and in-progress tasks</p>
-            <button
-              onClick={() => setShowAddTask(true)}
-              className="w-full py-2.5 bg-primary text-on-primary rounded-lg font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary-dim transition-all shadow-md"
-            >
-              <Icon name="add_task" className="text-lg" />
-              New Task
-            </button>
+            {canCreateTask && (
+              <button
+                onClick={() => setShowAddTask(true)}
+                className="w-full py-2.5 bg-primary text-on-primary rounded-lg font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary-dim transition-all shadow-md"
+              >
+                <Icon name="add_task" className="text-lg" />
+                New Task
+              </button>
+            )}
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-3">

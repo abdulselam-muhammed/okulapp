@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Icon } from "@/components/atoms";
 import { AddTaskModal } from "@/components/organisms";
 import { useTasksStore } from "@/lib/stores";
+import { useAbility } from "@/lib/hooks/useAbility";
 
 const TYPE_ICONS: Record<string, string> = {
   rescue: "pets",
@@ -36,6 +37,8 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export default function TasksPage() {
+  const ability = useAbility();
+  const canCreateTask = ability.can("create", "Task");
   const { tasks, loading, fetchTasks, updateTaskStatus } = useTasksStore();
   const [showAddModal, setShowAddModal] = useState(false);
   const [typeFilter, setTypeFilter] = useState("");
@@ -81,13 +84,15 @@ export default function TasksPage() {
               Create, assign, and track tasks across the campus care network.
             </p>
           </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="px-8 py-3 bg-primary text-on-primary rounded-full font-bold flex items-center gap-2 hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-primary/10"
-          >
-            <Icon name="add_task" className="text-lg" />
-            New Task
-          </button>
+          {canCreateTask && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="px-8 py-3 bg-primary text-on-primary rounded-full font-bold flex items-center gap-2 hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-primary/10"
+            >
+              <Icon name="add_task" className="text-lg" />
+              New Task
+            </button>
+          )}
         </div>
 
         {/* Stats */}
