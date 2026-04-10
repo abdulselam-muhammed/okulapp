@@ -8,7 +8,13 @@ const PROTECTED_ROUTES = ["/dashboard"];
 const GUEST_ONLY_ROUTES = ["/login", "/register"];
 
 // Public API routes (no Bearer token needed)
-const PUBLIC_API_ROUTES = ["/api/auth/login", "/api/auth/register", "/api/docs"];
+const PUBLIC_API_ROUTES = [
+  "/api/auth/login",
+  "/api/auth/register",
+  "/api/docs",
+  "/api/donations",
+  "/api/donations/create-payment-intent",
+];
 
 // Role-based access for dashboard sub-pages
 const ROLE_ACCESS: Record<string, string[]> = {

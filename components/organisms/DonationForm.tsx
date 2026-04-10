@@ -11,6 +11,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { Icon } from "@/components/atoms";
 import { useAuthStore, useToastStore } from "@/lib/stores";
+import { FormField } from "@/components/molecules";
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
@@ -18,7 +19,14 @@ const stripePromise = loadStripe(
 
 const PRESET_AMOUNTS = [25, 50, 100, 250];
 
-function CheckoutForm({ amount, note }: { amount: number; note: string }) {
+interface CheckoutFormProps {
+  amount: number;
+  note: string;
+  guestEmail?: string;
+  guestName?: string;
+}
+
+function CheckoutForm({ amount, note, guestEmail, guestName }: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
@@ -54,17 +62,23 @@ function CheckoutForm({ amount, note }: { amount: number; note: string }) {
     if (paymentIntent?.status === "succeeded") {
       // Record donation in our database
       try {
+        const headers: Record<string, string> = { "Content-Type": "application/json" };
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+
+        const body: Record<string, unknown> = {
+          amount,
+          payment_method: "stripe",
+          note: note || `Stripe payment ${paymentIntent.id}`,
+        };
+        if (!token && guestEmail && guestName) {
+          body.guest_email = guestEmail;
+          body.guest_name = guestName;
+        }
+
         const res = await fetch("/api/donations", {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            amount,
-            payment_method: "stripe",
-            note: note || `Stripe payment ${paymentIntent.id}`,
-          }),
+          headers,
+          body: JSON.stringify(body),
         });
 
         if (res.ok) {
@@ -116,35 +130,62 @@ function CheckoutForm({ amount, note }: { amount: number; note: string }) {
 }
 
 export default function DonationForm() {
+  const hydrate = useAuthStore((s) => s.hydrate);
   const token = useAuthStore((s) => s.token);
+
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
   const addToast = useToastStore((s) => s.addToast);
 
   const [amount, setAmount] = useState<number>(50);
   const [customAmount, setCustomAmount] = useState("");
   const [note, setNote] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
+  const [guestName, setGuestName] = useState("");
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [loadingIntent, setLoadingIntent] = useState(false);
   const [intentAmount, setIntentAmount] = useState<number>(0);
 
+  const isGuest = !token;
+
   async function initializePayment() {
-    if (!token) {
-      addToast("Please sign in to donate", "error");
-      return;
-    }
     if (amount < 1) {
       addToast("Amount must be at least $1", "error");
       return;
     }
 
+    // Guest validation
+    if (isGuest) {
+      if (!guestName.trim()) {
+        addToast("Please enter your name", "error");
+        return;
+      }
+      if (!guestEmail.trim()) {
+        addToast("Please enter your email", "error");
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail)) {
+        addToast("Please enter a valid email address", "error");
+        return;
+      }
+    }
+
     setLoadingIntent(true);
     try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const body: Record<string, unknown> = { amount };
+      if (isGuest) {
+        body.guest_email = guestEmail;
+        body.guest_name = guestName;
+      }
+
       const res = await fetch("/api/donations/create-payment-intent", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ amount }),
+        headers,
+        body: JSON.stringify(body),
       });
       const data = await res.json();
 
@@ -244,6 +285,42 @@ export default function DonationForm() {
           </div>
         </div>
 
+        {/* Guest Info (only if not logged in) */}
+        {isGuest && (
+          <div className="bg-surface-container-low rounded-lg p-8 md:p-10 space-y-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-on-secondary shadow-sm">
+                <Icon name="person" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold font-headline text-on-background">Your Information</h2>
+                <p className="text-xs text-on-surface-variant mt-1">
+                  Donating as a guest. We&apos;ll use this for your receipt.
+                </p>
+              </div>
+            </div>
+
+            <FormField
+              id="guest_name"
+              label="Full Name"
+              placeholder="Ali Yilmaz"
+              value={guestName}
+              onChange={(e) => setGuestName(e.target.value)}
+              icon="badge"
+            />
+
+            <FormField
+              id="guest_email"
+              label="Email Address"
+              type="email"
+              placeholder="you@example.com"
+              value={guestEmail}
+              onChange={(e) => setGuestEmail(e.target.value)}
+              icon="mail"
+            />
+          </div>
+        )}
+
         {/* Payment Section */}
         <div className="bg-surface-container-low rounded-lg p-8 md:p-10 space-y-6">
           <div className="flex items-center gap-4">
@@ -288,7 +365,12 @@ export default function DonationForm() {
                 },
               }}
             >
-              <CheckoutForm amount={intentAmount} note={note} />
+              <CheckoutForm
+                amount={intentAmount}
+                note={note}
+                guestEmail={isGuest ? guestEmail : undefined}
+                guestName={isGuest ? guestName : undefined}
+              />
             </Elements>
           )}
         </div>
