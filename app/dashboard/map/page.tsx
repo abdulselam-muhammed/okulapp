@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef, Suspense } from "react";
 import dynamic from "next/dynamic";
+import { useSearchParams } from "next/navigation";
 import L from "leaflet";
 import { Icon } from "@/components/atoms";
 import { AddTaskModal } from "@/components/organisms";
@@ -36,7 +37,9 @@ const PRIORITY_STYLES: Record<string, { bg: string; text: string; label: string 
   low: { bg: "bg-primary/10", text: "text-primary", label: "Low" },
 };
 
-export default function MapPage() {
+function MapPageContent() {
+  const searchParams = useSearchParams();
+  const focusTaskId = searchParams.get("taskId");
   const token = useAuthStore((s) => s.token);
   const addToast = useToastStore((s) => s.addToast);
   const { vets, fetchVets, getAvailability } = useVetsStore();
@@ -83,6 +86,27 @@ export default function MapPage() {
     fetchVets();
     fetchTasks();
   }, [fetchData, fetchVets, fetchTasks]);
+
+  // Fly to task location when ?taskId=X is in URL
+  useEffect(() => {
+    if (!focusTaskId || !mapRef.current || tasks.length === 0) return;
+
+    const task = tasks.find((t) => t.id === Number(focusTaskId));
+    if (!task || !task.notes) return;
+
+    const locMatch = task.notes.match(/\[Location:\s*([-\d.]+),\s*([-\d.]+)\]/);
+    if (!locMatch) {
+      addToast(`Task #${focusTaskId} has no location attached`, "info");
+      return;
+    }
+
+    const lat = parseFloat(locMatch[1]);
+    const lng = parseFloat(locMatch[2]);
+    if (isNaN(lat) || isNaN(lng)) return;
+
+    mapRef.current.flyTo([lat, lng], 17, { duration: 1.5 });
+    addToast(`Focused on task #${focusTaskId}`, "info");
+  }, [focusTaskId, tasks, addToast]);
 
   // Build markers from all data sources
   const markers: MapMarker[] = useMemo(() => {
@@ -352,5 +376,17 @@ export default function MapPage() {
       </div>
     </div>
     </>
+  );
+}
+
+export default function MapPage() {
+  return (
+    <Suspense fallback={
+      <div className="w-full h-[calc(100vh-4rem)] flex items-center justify-center bg-surface-container-low">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <MapPageContent />
+    </Suspense>
   );
 }

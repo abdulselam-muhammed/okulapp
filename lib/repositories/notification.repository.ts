@@ -1,5 +1,6 @@
 import { BaseRepository } from "./base.repository";
 import type { RowDataPacket } from "mysql2";
+import { emitNotification } from "@/lib/helpers/notification-emitter";
 
 export interface NotificationRow extends RowDataPacket {
   id: number;
@@ -49,7 +50,7 @@ class NotificationRepository extends BaseRepository<NotificationRow> {
     relatedType?: string,
     relatedId?: number
   ): Promise<number> {
-    return this.create({
+    const id = await this.create({
       user_id: userId,
       title,
       message,
@@ -57,6 +58,20 @@ class NotificationRepository extends BaseRepository<NotificationRow> {
       related_type: relatedType ?? null,
       related_id: relatedId ?? null,
     });
+
+    // Emit real-time event to SSE subscribers for this user
+    emitNotification(userId, {
+      id,
+      user_id: userId,
+      title,
+      message,
+      type,
+      related_type: relatedType ?? null,
+      related_id: relatedId ?? null,
+      created_at: new Date().toISOString(),
+    });
+
+    return id;
   }
 }
 

@@ -14,6 +14,7 @@ const PUBLIC_API_ROUTES = [
   "/api/docs",
   "/api/donations",
   "/api/donations/create-payment-intent",
+  "/api/notifications/stream",
 ];
 
 // Role-based access for dashboard sub-pages
