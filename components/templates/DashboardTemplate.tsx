@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Sidebar, TopBar } from "@/components/organisms";
 import { useAuthStore } from "@/lib/stores";
 
@@ -10,7 +9,6 @@ export default function DashboardTemplate({
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const loading = useAuthStore((s) => s.loading);
   const hydrate = useAuthStore((s) => s.hydrate);
@@ -19,12 +17,6 @@ export default function DashboardTemplate({
   useEffect(() => {
     hydrate();
   }, [hydrate]);
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.replace("/login");
-    }
-  }, [loading, user, router]);
 
   if (loading || !user) {
     return (

@@ -1,40 +1,79 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-// Public routes that don't require authentication
-const PUBLIC_ROUTES = [
-  "/api/auth/login",
-  "/api/auth/register",
-  "/api/docs",
-];
+// Pages that require authentication
+const PROTECTED_ROUTES = ["/dashboard"];
+
+// Pages only for guests (redirect to dashboard if logged in)
+const GUEST_ONLY_ROUTES = ["/login", "/register"];
+
+// Public API routes (no Bearer token needed)
+const PUBLIC_API_ROUTES = ["/api/auth/login", "/api/auth/register", "/api/docs"];
+
+// Role-based access for dashboard sub-pages
+const ROLE_ACCESS: Record<string, string[]> = {
+  "/dashboard/users": ["admin", "advisor"],
+  "/dashboard/roles": ["admin"],
+  "/dashboard/donations": ["admin", "advisor"],
+};
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip non-API routes (pages, static files, etc.)
-  if (!pathname.startsWith("/api/")) {
+  // ─── API Routes ─────────────────────────────────────────
+  if (pathname.startsWith("/api/")) {
+    if (PUBLIC_API_ROUTES.includes(pathname)) {
+      return NextResponse.next();
+    }
+
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return NextResponse.json(
+        { success: false, error: { message: "Missing or invalid Authorization header" } },
+        { status: 401 }
+      );
+    }
+
     return NextResponse.next();
   }
 
-  // Allow public auth routes
-  if (PUBLIC_ROUTES.includes(pathname)) {
+  // ─── Page Routes ────────────────────────────────────────
+  const token = request.cookies.get("token")?.value;
+  const userRole = request.cookies.get("user_role")?.value;
+  const isAuthenticated = !!token;
+
+  // Guest-only pages: redirect to dashboard if already logged in
+  if (GUEST_ONLY_ROUTES.some((route) => pathname === route)) {
+    if (isAuthenticated) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
     return NextResponse.next();
   }
 
-  // Check for Authorization header on all other API routes
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
-    return NextResponse.json(
-      { success: false, error: { message: "Missing or invalid Authorization header" } },
-      { status: 401 }
-    );
+  // Protected pages: redirect to login if not authenticated
+  if (PROTECTED_ROUTES.some((route) => pathname.startsWith(route))) {
+    if (!isAuthenticated) {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+
+    // Role-based access check
+    for (const [route, allowedRoles] of Object.entries(ROLE_ACCESS)) {
+      if (pathname.startsWith(route) && userRole && !allowedRoles.includes(userRole)) {
+        return NextResponse.redirect(new URL("/dashboard", request.url));
+      }
+    }
+
+    return NextResponse.next();
   }
 
-  // Token verification is done in route handlers via getAuth() / requireRole()
-  // Proxy only checks that a token is present
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/api/:path*"],
+  matcher: [
+    "/api/:path*",
+    "/dashboard/:path*",
+    "/login",
+    "/register",
+  ],
 };
