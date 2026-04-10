@@ -3,16 +3,29 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon } from "@/components/atoms";
+import { useAbility } from "@/lib/hooks/useAbility";
+import { useAuthStore } from "@/lib/stores";
+import type { Actions, Subjects } from "@/lib/helpers/ability";
 
-const NAV_ITEMS = [
+interface NavItem {
+  href: string;
+  icon: string;
+  label: string;
+  filledIcon?: boolean;
+  requiredAction?: Actions;
+  requiredSubject?: Subjects;
+}
+
+const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", icon: "dashboard", label: "Dashboard" },
-  { href: "/dashboard/users", icon: "group", label: "Users" },
-  { href: "/dashboard/roles", icon: "security", label: "Roles" },
-  { href: "/dashboard/vets", icon: "medical_services", label: "Veterinarians" },
-  { href: "/dashboard/donations", icon: "volunteer_activism", label: "Donations", filledIcon: true },
-  { href: "/dashboard/tasks", icon: "task_alt", label: "Tasks" },
-  { href: "/dashboard/logs", icon: "list_alt", label: "Activity Logs" },
-  { href: "/dashboard/map", icon: "map", label: "Activity Map" },
+  { href: "/dashboard/users", icon: "group", label: "Users", requiredAction: "read", requiredSubject: "User" },
+  { href: "/dashboard/roles", icon: "security", label: "Roles", requiredAction: "read", requiredSubject: "Role" },
+  { href: "/dashboard/vets", icon: "medical_services", label: "Veterinarians", requiredAction: "read", requiredSubject: "Vet" },
+  { href: "/dashboard/donations", icon: "volunteer_activism", label: "Donations", filledIcon: true, requiredAction: "read", requiredSubject: "Donation" },
+  { href: "/dashboard/tasks", icon: "task_alt", label: "Tasks", requiredAction: "read", requiredSubject: "Task" },
+  { href: "/dashboard/logs", icon: "list_alt", label: "Activity Logs", requiredAction: "read", requiredSubject: "Task" },
+  { href: "/dashboard/map", icon: "map", label: "Activity Map", requiredAction: "read", requiredSubject: "FeedingPoint" },
+  { href: "/dashboard/notifications", icon: "notifications", label: "Notifications" },
   { href: "/dashboard/profile", icon: "person", label: "Profile" },
 ];
 
@@ -22,6 +35,13 @@ interface SidebarProps {
 
 export default function Sidebar({ onLogout }: SidebarProps) {
   const pathname = usePathname();
+  const ability = useAbility();
+  const role = useAuthStore((s) => s.user?.role);
+
+  const visibleItems = NAV_ITEMS.filter((item) => {
+    if (!item.requiredAction || !item.requiredSubject) return true;
+    return ability.can(item.requiredAction, item.requiredSubject);
+  });
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-slate-50 flex flex-col py-6 space-y-2 z-50">
@@ -33,14 +53,16 @@ export default function Sidebar({ onLogout }: SidebarProps) {
           </div>
           <div>
             <h2 className="text-lg font-black text-emerald-800 leading-none">Campus Care</h2>
-            <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mt-1">Admin Terminal</p>
+            <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mt-1 capitalize">
+              {role ? `${role} Terminal` : "Terminal"}
+            </p>
           </div>
         </div>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 px-2 space-y-1">
-        {NAV_ITEMS.map((item) => {
+        {visibleItems.map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link
@@ -61,13 +83,6 @@ export default function Sidebar({ onLogout }: SidebarProps) {
 
       {/* Bottom Actions */}
       <div className="px-4 mt-auto space-y-1">
-        <Link
-          href="/dashboard/settings"
-          className="text-slate-600 mx-2 px-4 py-3 mb-1 flex items-center gap-3 hover:bg-slate-200/50 rounded-xl transition-all"
-        >
-          <Icon name="settings" />
-          <span className="font-medium">Settings</span>
-        </Link>
         <button
           onClick={onLogout}
           className="w-full text-slate-600 mx-2 px-4 py-3 mb-1 flex items-center gap-3 hover:bg-slate-200/50 rounded-xl transition-all text-left"

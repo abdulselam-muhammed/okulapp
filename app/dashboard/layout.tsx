@@ -1,11 +1,16 @@
 "use client";
 
 import { DashboardTemplate } from "@/components/templates";
+import { AbilityProvider } from "@/lib/hooks/useAbility";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <DashboardTemplate>{children}</DashboardTemplate>;
+  return (
+    <AbilityProvider>
+      <DashboardTemplate>{children}</DashboardTemplate>
+    </AbilityProvider>
+  );
 }

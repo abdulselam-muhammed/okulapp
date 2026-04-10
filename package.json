@@ -16,6 +16,8 @@
     "seed:clean": "npx tsx scripts/cleanup-seed.ts"
   },
   "dependencies": {
+    "@casl/ability": "^6.8.0",
+    "@casl/react": "^5.0.1",
     "@prisma/client": "^7.6.0",
     "@stripe/react-stripe-js": "^6.1.0",
     "@stripe/stripe-js": "^9.1.0",

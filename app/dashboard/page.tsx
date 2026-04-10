@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Icon } from "@/components/atoms";
 import type { MapMarker } from "@/components/atoms/LeafletMap";
 import { useAuthStore, useToastStore, useTasksStore, useVetsStore, useUsersStore } from "@/lib/stores";
+import { useAbility } from "@/lib/hooks/useAbility";
 
 const LeafletMap = dynamic(() => import("@/components/atoms/LeafletMap"), { ssr: false });
 
@@ -28,6 +29,7 @@ export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.token);
   const addToast = useToastStore((s) => s.addToast);
+  const ability = useAbility();
   const { tasks, fetchTasks } = useTasksStore();
   const { vets, fetchVets, getAvailability } = useVetsStore();
   const { users, fetchUsers } = useUsersStore();
@@ -37,24 +39,41 @@ export default function DashboardPage() {
   const [balance, setBalance] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
+  // Permission checks
+  const canReadFeedingPoints = ability.can("read", "FeedingPoint");
+  const canReadDonations = ability.can("read", "Donation");
+  const canReadBalance = ability.can("read", "DonationBalance");
+  const canReadTasks = ability.can("read", "Task");
+  const canReadVets = ability.can("read", "Vet");
+  const canReadUsers = ability.can("read", "User");
+
   useEffect(() => {
     if (!token) return;
 
     async function fetchAll() {
+      const headers = { Authorization: `Bearer ${token}` };
+
       try {
-        const [fpRes, donRes, balRes] = await Promise.all([
-          fetch("/api/feeding-points?limit=100", { headers: { Authorization: `Bearer ${token}` } }),
-          fetch("/api/donations?limit=10", { headers: { Authorization: `Bearer ${token}` } }),
-          fetch("/api/donations/balance", { headers: { Authorization: `Bearer ${token}` } }),
-        ]);
+        const requests: Promise<Response | null>[] = [
+          canReadFeedingPoints ? fetch("/api/feeding-points?limit=100", { headers }) : Promise.resolve(null),
+          canReadDonations ? fetch("/api/donations?limit=10", { headers }) : Promise.resolve(null),
+          canReadBalance ? fetch("/api/donations/balance", { headers }) : Promise.resolve(null),
+        ];
 
-        const fpData = await fpRes.json();
-        const donData = await donRes.json();
-        const balData = await balRes.json();
+        const [fpRes, donRes, balRes] = await Promise.all(requests);
 
-        if (fpData.success) setFeedingPoints(fpData.data);
-        if (donData.success) setDonations(donData.data);
-        if (balData.success) setBalance(balData.data.balance);
+        if (fpRes) {
+          const fpData = await fpRes.json();
+          if (fpData.success) setFeedingPoints(fpData.data);
+        }
+        if (donRes) {
+          const donData = await donRes.json();
+          if (donData.success) setDonations(donData.data);
+        }
+        if (balRes) {
+          const balData = await balRes.json();
+          if (balData.success) setBalance(balData.data.balance);
+        }
       } catch {
         addToast("Failed to load dashboard data", "error");
       } finally {
@@ -63,10 +82,10 @@ export default function DashboardPage() {
     }
 
     fetchAll();
-    fetchTasks();
-    fetchVets();
-    fetchUsers();
-  }, [token, addToast, fetchTasks, fetchVets, fetchUsers]);
+    if (canReadTasks) fetchTasks();
+    if (canReadVets) fetchVets();
+    if (canReadUsers) fetchUsers();
+  }, [token, addToast, fetchTasks, fetchVets, fetchUsers, canReadFeedingPoints, canReadDonations, canReadBalance, canReadTasks, canReadVets, canReadUsers]);
 
   // Stats
   const volunteerCount = users.filter((u) => u.role === "volunteer").length;
@@ -171,15 +190,17 @@ export default function DashboardPage() {
           <p className="text-xs text-on-surface-variant mt-1">{activeStations} active</p>
         </div>
 
-        <div className="bg-surface-container-lowest p-8 rounded-lg shadow-sm shadow-emerald-900/5 hover:shadow-xl transition-all duration-300">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-3 bg-secondary-container text-secondary rounded-2xl"><Icon name="groups" /></div>
-            <span className="text-xs font-bold text-secondary bg-secondary/10 px-2 py-1 rounded-full">{users.length} total</span>
+        {canReadUsers && (
+          <div className="bg-surface-container-lowest p-8 rounded-lg shadow-sm shadow-emerald-900/5 hover:shadow-xl transition-all duration-300">
+            <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-secondary-container text-secondary rounded-2xl"><Icon name="groups" /></div>
+              <span className="text-xs font-bold text-secondary bg-secondary/10 px-2 py-1 rounded-full">{users.length} total</span>
+            </div>
+            <h3 className="text-on-surface-variant text-sm font-label uppercase tracking-wider">Volunteers</h3>
+            <p className="text-4xl font-headline font-bold text-on-surface mt-1">{volunteerCount}</p>
+            <p className="text-xs text-on-surface-variant mt-1">{vets.length} vets registered</p>
           </div>
-          <h3 className="text-on-surface-variant text-sm font-label uppercase tracking-wider">Volunteers</h3>
-          <p className="text-4xl font-headline font-bold text-on-surface mt-1">{volunteerCount}</p>
-          <p className="text-xs text-on-surface-variant mt-1">{vets.length} vets registered</p>
-        </div>
+        )}
 
         <div className="bg-surface-container-lowest p-8 rounded-lg shadow-sm shadow-emerald-900/5 hover:shadow-xl transition-all duration-300">
           <div className="flex justify-between items-start mb-4">
@@ -191,15 +212,17 @@ export default function DashboardPage() {
           <p className="text-xs text-on-surface-variant mt-1">{completedTasks.length} completed</p>
         </div>
 
-        <div className="bg-surface-container-lowest p-8 rounded-lg shadow-sm shadow-emerald-900/5 hover:shadow-xl transition-all duration-300">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-3 bg-surface-variant text-on-surface-variant rounded-2xl"><Icon name="payments" /></div>
-            <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded-full">Balance</span>
+        {canReadDonations && (
+          <div className="bg-surface-container-lowest p-8 rounded-lg shadow-sm shadow-emerald-900/5 hover:shadow-xl transition-all duration-300">
+            <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-surface-variant text-on-surface-variant rounded-2xl"><Icon name="payments" /></div>
+              <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded-full">Balance</span>
+            </div>
+            <h3 className="text-on-surface-variant text-sm font-label uppercase tracking-wider">Donations</h3>
+            <p className="text-4xl font-headline font-bold text-on-surface mt-1">${balance.toFixed(0)}</p>
+            <p className="text-xs text-on-surface-variant mt-1">${totalDonations.toFixed(0)} total received</p>
           </div>
-          <h3 className="text-on-surface-variant text-sm font-label uppercase tracking-wider">Donations</h3>
-          <p className="text-4xl font-headline font-bold text-on-surface mt-1">${balance.toFixed(0)}</p>
-          <p className="text-xs text-on-surface-variant mt-1">${totalDonations.toFixed(0)} total received</p>
-        </div>
+        )}
       </div>
 
       {/* Content Grid */}
