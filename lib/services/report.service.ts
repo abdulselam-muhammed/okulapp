@@ -1,6 +1,7 @@
 import { reportRepository } from "@/lib/repositories/report.repository";
 import { animalRepository } from "@/lib/repositories/animal.repository";
 import { notificationRepository } from "@/lib/repositories/notification.repository";
+import { activityLog } from "@/lib/services/activity-log.service";
 import { ApiError } from "@/lib/helpers/api-error";
 import type { CreateReportDto, UpdateReportStatusDto } from "@/lib/dto/report.dto";
 
@@ -49,10 +50,19 @@ export const reportService = {
       });
     }
 
+    await activityLog.log(
+      reporterId,
+      "create",
+      "report",
+      reportId,
+      `Created ${dto.type} report #${reportId}${dto.species ? ` (${dto.species})` : ""}`,
+      { type: dto.type, condition: dto.condition_level }
+    );
+
     return reportRepository.findById(reportId);
   },
 
-  async updateStatus(id: number, dto: UpdateReportStatusDto) {
+  async updateStatus(id: number, dto: UpdateReportStatusDto, actorId: number | null = null) {
     const report = await reportService.getById(id);
 
     await reportRepository.update(id, {
@@ -69,6 +79,15 @@ export const reportService = {
       "report_status",
       "report",
       id
+    );
+
+    await activityLog.log(
+      actorId,
+      "status_change",
+      "report",
+      id,
+      `Changed report #${id} status to ${dto.status}`,
+      { from: report.status, to: dto.status }
     );
 
     return reportRepository.findById(id);

@@ -1,5 +1,5 @@
 import { feedingPointRepository } from "@/lib/repositories/feeding-point.repository";
-import { notificationRepository } from "@/lib/repositories/notification.repository";
+import { activityLog } from "@/lib/services/activity-log.service";
 import { ApiError } from "@/lib/helpers/api-error";
 import type { CreateFeedingPointDto, RefillFeedingPointDto } from "@/lib/dto/feeding-point.dto";
 
@@ -22,6 +22,16 @@ export const feedingPointService = {
       description: dto.description ?? null,
       created_by: createdBy,
     });
+
+    await activityLog.log(
+      createdBy,
+      "create",
+      "feeding_point",
+      id,
+      `Created feeding point "${dto.name}"`,
+      { name: dto.name }
+    );
+
     return feedingPointRepository.findById(id);
   },
 
@@ -35,6 +45,15 @@ export const feedingPointService = {
       note: dto.note ?? null,
       photo_url: dto.photo_url ?? null,
     });
+
+    await activityLog.log(
+      volunteerId,
+      "create",
+      "refill",
+      refillId,
+      `Submitted ${dto.refill_type} refill for feeding point #${feedingPointId}`,
+      { feeding_point_id: feedingPointId, refill_type: dto.refill_type }
+    );
 
     return refillId;
   },
@@ -56,6 +75,15 @@ export const feedingPointService = {
         last_refill_at: new Date(),
       });
     }
+
+    await activityLog.log(
+      advisorId,
+      "approve",
+      "refill",
+      refillId,
+      `Approved refill request #${refillId}`,
+      { feeding_point_id: refill?.feeding_point_id }
+    );
   },
 
   async getRefills(feedingPointId: number) {

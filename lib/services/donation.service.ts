@@ -1,5 +1,6 @@
 import { donationRepository } from "@/lib/repositories/donation.repository";
 import { userRepository } from "@/lib/repositories/user.repository";
+import { activityLog } from "@/lib/services/activity-log.service";
 import { ApiError } from "@/lib/helpers/api-error";
 import { hashPassword } from "@/lib/helpers/auth";
 import type { CreateDonationDto, CreatePurchaseDto } from "@/lib/dto/donation.dto";
@@ -20,6 +21,16 @@ export const donationService = {
       payment_method: dto.payment_method ?? null,
       note: dto.note ?? null,
     });
+
+    await activityLog.log(
+      donorId,
+      "create",
+      "donation",
+      id,
+      `Made a donation of $${dto.amount}${dto.payment_method ? ` via ${dto.payment_method}` : ""}`,
+      { amount: dto.amount, payment_method: dto.payment_method }
+    );
+
     return donationRepository.findById(id);
   },
 
@@ -63,6 +74,16 @@ export const donationService = {
       payment_method: dto.payment_method ?? null,
       note: dto.note ?? null,
     });
+
+    await activityLog.log(
+      donorId,
+      "create",
+      "donation",
+      id,
+      `Guest donated $${dto.amount} (${dto.guest_name})`,
+      { amount: dto.amount, guest: true }
+    );
+
     return donationRepository.findById(id);
   },
 
@@ -80,6 +101,16 @@ export const donationService = {
       amount: dto.amount,
       receipt_url: dto.receipt_url ?? null,
     });
+
+    await activityLog.log(
+      adminId,
+      "create",
+      "purchase",
+      id,
+      `Recorded purchase of $${dto.amount}: ${dto.description}`,
+      { amount: dto.amount, description: dto.description }
+    );
+
     return id;
   },
 };

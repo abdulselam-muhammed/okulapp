@@ -5,9 +5,9 @@ import { reportService } from "@/lib/services/report.service";
 import { updateReportStatusDto } from "@/lib/dto/report.dto";
 
 export const PATCH = handler(async (req, ctx: { params: Promise<{ id: string }> }) => {
-  requireRole(req, "admin", "advisor");
+  const auth = requireRole(req, "admin", "advisor");
   const { id } = await ctx.params;
   const dto = await validate(req, updateReportStatusDto);
-  const report = await reportService.updateStatus(Number(id), dto);
+  const report = await reportService.updateStatus(Number(id), dto, auth.userId);
   return res.success(report);
 });

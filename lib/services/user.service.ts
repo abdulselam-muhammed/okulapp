@@ -1,4 +1,5 @@
 import { userRepository } from "@/lib/repositories/user.repository";
+import { activityLog } from "@/lib/services/activity-log.service";
 import { ApiError } from "@/lib/helpers/api-error";
 import { hashPassword } from "@/lib/helpers/auth";
 import type { CreateUserDto, UpdateUserDto } from "@/lib/dto/user.dto";
@@ -19,7 +20,7 @@ export const userService = {
     return userRepository.findByRole(role, limit, offset);
   },
 
-  async create(dto: CreateUserDto) {
+  async create(dto: CreateUserDto, actorId: number | null = null) {
     const existing = await userRepository.findByEmail(dto.email);
     if (existing) throw ApiError.conflict("Email already in use");
 
@@ -33,18 +34,50 @@ export const userService = {
       phone: dto.phone ?? null,
     });
 
+    await activityLog.log(
+      actorId,
+      "create",
+      "user",
+      id,
+      `Created ${dto.role} account for ${dto.first_name} ${dto.last_name} (${dto.email})`,
+      { role: dto.role, email: dto.email }
+    );
+
     return userRepository.findById(id);
   },
 
-  async update(id: number, dto: UpdateUserDto) {
-    await userService.getById(id); // ensure exists
+  async update(id: number, dto: UpdateUserDto, actorId: number | null = null) {
+    const existing = await userService.getById(id);
     await userRepository.update(id, dto);
+
+    const changes = Object.keys(dto).filter((k) => k in dto);
+    await activityLog.log(
+      actorId,
+      "update",
+      "user",
+      id,
+      `Updated user ${existing.first_name} ${existing.last_name}: ${changes.join(", ")}`,
+      { fields: changes }
+    );
+
     return userRepository.findById(id);
   },
 
-  async delete(id: number) {
+  async delete(id: number, actorId: number | null = null) {
+    const existing = await userRepository.findById(id);
     const deleted = await userRepository.delete(id);
     if (!deleted) throw ApiError.notFound("User not found");
+
+    await activityLog.log(
+      actorId,
+      "delete",
+      "user",
+      id,
+      existing
+        ? `Deleted user ${existing.first_name} ${existing.last_name} (${existing.email})`
+        : `Deleted user #${id}`,
+      existing ? { email: existing.email, role: existing.role } : undefined
+    );
   },
 
   async updateLocation(id: number, lat: number, lng: number) {

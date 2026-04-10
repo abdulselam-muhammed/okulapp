@@ -29,15 +29,15 @@ export const PUT = handler(async (req, ctx: { params: Promise<{ id: string }> })
   }
 
   const dto = await validate(req, updateUserDto);
-  const user = await userService.update(userId, dto);
+  const user = await userService.update(userId, dto, auth.userId);
   return res.success(user);
 });
 
 export const DELETE = handler(async (req, ctx: { params: Promise<{ id: string }> }) => {
-  requireRole(req, "admin");
+  const auth = requireRole(req, "admin");
   const { id } = await ctx.params;
   const userId = Number(id);
 
-  await userService.delete(userId);
+  await userService.delete(userId, auth.userId);
   return res.noContent();
 });

@@ -1,5 +1,6 @@
 import { taskRepository } from "@/lib/repositories/task.repository";
 import { notificationRepository } from "@/lib/repositories/notification.repository";
+import { activityLog } from "@/lib/services/activity-log.service";
 import { ApiError } from "@/lib/helpers/api-error";
 import type { CreateTaskDto, UpdateTaskStatusDto } from "@/lib/dto/task.dto";
 
@@ -47,6 +48,15 @@ export const taskService = {
       id
     );
 
+    await activityLog.log(
+      advisorId,
+      "create",
+      "task",
+      id,
+      `Created ${dto.type} task #${id} and assigned to volunteer #${dto.assigned_to}`,
+      { type: dto.type, priority: dto.priority ?? "medium", assigned_to: dto.assigned_to }
+    );
+
     return taskRepository.findById(id);
   },
 
@@ -82,6 +92,15 @@ export const taskService = {
         taskId
       );
     }
+
+    await activityLog.log(
+      userId,
+      "status_change",
+      "task",
+      taskId,
+      `Changed task #${taskId} status to ${dto.status}`,
+      { from: task.status, to: dto.status }
+    );
 
     return taskRepository.findById(taskId);
   },

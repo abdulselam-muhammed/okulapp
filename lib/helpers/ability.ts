@@ -32,7 +32,8 @@ export type Subjects =
   | "Refill"
   | "Notification"
   | "Dashboard"
-  | "DashboardStats";
+  | "DashboardStats"
+  | "ActivityLog";
 
 export type AppAbility = MongoAbility<[Actions, Subjects]>;
 
@@ -72,6 +73,8 @@ export function defineAbilityFor(role: string | null | undefined): AppAbility {
       can("read", "FeedingPoint");
       can("create", "FeedingPoint");
       can("approve", "Refill");
+      // Activity logs (audit trail)
+      can("read", "ActivityLog");
       // Dashboard
       can("read", "DashboardStats");
       break;

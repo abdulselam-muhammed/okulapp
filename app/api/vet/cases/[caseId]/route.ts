@@ -5,9 +5,9 @@ import { vetService } from "@/lib/services/vet.service";
 import { updateVetCaseDto } from "@/lib/dto/vet.dto";
 
 export const PATCH = handler(async (req, ctx: { params: Promise<{ caseId: string }> }) => {
-  requireRole(req, "vet");
+  const auth = requireRole(req, "vet");
   const { caseId } = await ctx.params;
   const dto = await validate(req, updateVetCaseDto);
-  await vetService.updateCase(Number(caseId), dto);
+  await vetService.updateCase(Number(caseId), dto, auth.userId);
   return res.success({ message: "Case updated" });
 });

@@ -23,7 +23,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard/vets", icon: "medical_services", label: "Veterinarians", requiredAction: "read", requiredSubject: "Vet" },
   { href: "/dashboard/donations", icon: "volunteer_activism", label: "Donations", filledIcon: true, requiredAction: "read", requiredSubject: "Donation" },
   { href: "/dashboard/tasks", icon: "task_alt", label: "Tasks", requiredAction: "read", requiredSubject: "Task" },
-  { href: "/dashboard/logs", icon: "list_alt", label: "Activity Logs", requiredAction: "read", requiredSubject: "Task" },
+  { href: "/dashboard/logs", icon: "list_alt", label: "Activity Logs", requiredAction: "read", requiredSubject: "ActivityLog" },
   { href: "/dashboard/map", icon: "map", label: "Activity Map", requiredAction: "read", requiredSubject: "FeedingPoint" },
   { href: "/dashboard/notifications", icon: "notifications", label: "Notifications" },
   { href: "/dashboard/profile", icon: "person", label: "Profile" },
