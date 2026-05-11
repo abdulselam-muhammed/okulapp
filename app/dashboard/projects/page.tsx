@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/atoms";
-import { ProjectFormModal } from "@/components/organisms";
+import { ProjectFormModal, ConfirmDialog } from "@/components/organisms";
 import { useProjectsStore, type ProjectItem } from "@/lib/stores";
 import { useAbility } from "@/lib/hooks/useAbility";
 
@@ -20,14 +20,20 @@ export default function ProjectsAdminPage() {
 
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<ProjectItem | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ProjectItem | null>(null);
 
   useEffect(() => {
     fetchProjects();
   }, [fetchProjects]);
 
   function handleDelete(p: ProjectItem) {
-    if (!confirm(`Delete project "${p.title}"? This also deletes its images.`)) return;
-    deleteProject(p.id, p.title);
+    setDeleteTarget(p);
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    await deleteProject(deleteTarget.id, deleteTarget.title);
+    setDeleteTarget(null);
   }
 
   function handleEdit(p: ProjectItem) {
@@ -43,6 +49,17 @@ export default function ProjectsAdminPage() {
   return (
     <>
       <ProjectFormModal open={showForm} onClose={handleClose} project={editing} />
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Delete Project"
+        message={`Delete project "${deleteTarget?.title}"?`}
+        detail="This will permanently delete the project and all its gallery images. Articles linked to this project will become standalone. This cannot be undone."
+        confirmLabel="Delete Project"
+        variant="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
 
       <section className="pt-24 px-10 pb-20 max-w-7xl mx-auto space-y-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">

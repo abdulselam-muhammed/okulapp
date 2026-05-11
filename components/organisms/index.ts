@@ -13,3 +13,4 @@ export { default as DonationForm } from "./DonationForm";
 export { default as InvoiceModal } from "./InvoiceModal";
 export { default as ProjectFormModal } from "./ProjectFormModal";
 export { default as ArticleFormModal } from "./ArticleFormModal";
+export { default as ConfirmDialog } from "./ConfirmDialog";

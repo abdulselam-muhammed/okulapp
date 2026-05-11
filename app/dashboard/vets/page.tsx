@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/atoms";
-import { AddVetModal, EditAvailabilityModal } from "@/components/organisms";
+import { AddVetModal, EditAvailabilityModal, ConfirmDialog } from "@/components/organisms";
 import { useVetsStore } from "@/lib/stores";
 import type { VetUser } from "@/lib/stores";
 
@@ -11,14 +11,20 @@ export default function VetsPage() {
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [editVet, setEditVet] = useState<VetUser | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<VetUser | null>(null);
 
   useEffect(() => {
     fetchVets();
   }, [fetchVets]);
 
   function handleDelete(vet: VetUser) {
-    if (!confirm(`Are you sure you want to remove Dr. ${vet.first_name} ${vet.last_name}?`)) return;
-    deleteVet(vet.id, `${vet.first_name} ${vet.last_name}`);
+    setDeleteTarget(vet);
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    await deleteVet(deleteTarget.id, `${deleteTarget.first_name} ${deleteTarget.last_name}`);
+    setDeleteTarget(null);
   }
 
   const activeVets = vets.filter((v) => v.is_active).length;
@@ -27,6 +33,17 @@ export default function VetsPage() {
     <>
       <AddVetModal open={showAddModal} onClose={() => setShowAddModal(false)} />
       <EditAvailabilityModal open={!!editVet} onClose={() => setEditVet(null)} vet={editVet} />
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Remove Veterinarian"
+        message={`Are you sure you want to remove Dr. ${deleteTarget?.first_name ?? ""} ${deleteTarget?.last_name ?? ""}?`}
+        detail="This action cannot be undone. The vet's account and all associated case records will be removed."
+        confirmLabel="Remove Vet"
+        variant="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
 
       <section className="pt-24 px-10 pb-20 max-w-7xl mx-auto space-y-8">
         {/* Header */}

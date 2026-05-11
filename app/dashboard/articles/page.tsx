@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/atoms";
-import { ArticleFormModal } from "@/components/organisms";
+import { ArticleFormModal, ConfirmDialog } from "@/components/organisms";
 import { useArticlesStore, type ArticleItem } from "@/lib/stores";
 import { useAbility } from "@/lib/hooks/useAbility";
 
@@ -13,14 +13,20 @@ export default function ArticlesAdminPage() {
 
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<ArticleItem | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ArticleItem | null>(null);
 
   useEffect(() => {
     fetchArticles();
   }, [fetchArticles]);
 
   function handleDelete(a: ArticleItem) {
-    if (!confirm(`Delete article "${a.title}"?`)) return;
-    deleteArticle(a.id, a.title);
+    setDeleteTarget(a);
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    await deleteArticle(deleteTarget.id, deleteTarget.title);
+    setDeleteTarget(null);
   }
 
   function handleEdit(a: ArticleItem) {
@@ -36,6 +42,17 @@ export default function ArticlesAdminPage() {
   return (
     <>
       <ArticleFormModal open={showForm} onClose={handleClose} article={editing} />
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Delete Article"
+        message={`Delete article "${deleteTarget?.title}"?`}
+        detail="This will permanently delete the article. This action cannot be undone."
+        confirmLabel="Delete Article"
+        variant="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
 
       <section className="pt-24 px-10 pb-20 max-w-7xl mx-auto space-y-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">

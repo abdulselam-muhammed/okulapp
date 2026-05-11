@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/atoms";
-import { AddUserModal } from "@/components/organisms";
+import { AddUserModal, ConfirmDialog } from "@/components/organisms";
 import { useUsersStore } from "@/lib/stores";
 
 const ROLE_STYLES: Record<string, string> = {
@@ -20,6 +20,7 @@ export default function UsersPage() {
   } = useUsersStore();
 
   const [showAddModal, setShowAddModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -42,13 +43,29 @@ export default function UsersPage() {
   };
 
   function handleDelete(userId: number, userName: string) {
-    if (!confirm(`Are you sure you want to delete ${userName}?`)) return;
-    deleteUser(userId, userName);
+    setDeleteTarget({ id: userId, name: userName });
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    await deleteUser(deleteTarget.id, deleteTarget.name);
+    setDeleteTarget(null);
   }
 
   return (
     <>
       <AddUserModal open={showAddModal} onClose={() => setShowAddModal(false)} />
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Delete User"
+        message={`Are you sure you want to delete ${deleteTarget?.name}?`}
+        detail="This action cannot be undone. All data associated with this user will be permanently removed."
+        confirmLabel="Delete User"
+        variant="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
 
       <section className="pt-24 px-10 pb-20 max-w-7xl mx-auto space-y-8">
         {/* Header */}
