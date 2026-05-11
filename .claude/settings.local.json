@@ -14,7 +14,9 @@
       "Bash(node -e \"const s = require\\('stripe'\\); console.log\\(Object.keys\\(s.prototype || s\\)\\)\")",
       "Bash(npm run:*)",
       "Bash(docker restart:*)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\bdals\\\\OneDrive\\\\Desktop\\\\proje1\\\\okulapp\" -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty Name)"
     ]
   }
 }

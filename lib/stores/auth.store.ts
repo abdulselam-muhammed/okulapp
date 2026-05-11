@@ -39,11 +39,14 @@ export const useAuthStore = create<AuthStore>((set) => ({
     if (storedToken && storedUser) {
       try {
         const user = JSON.parse(storedUser);
-        // Sync cookies for middleware
-        setCookie("token", storedToken);
-        setCookie("user_role", user.role);
-        set({ user, token: storedToken, loading: false });
-        return;
+        // Validate that the stored user has the required shape
+        if (user && typeof user === "object" && user.id && user.email && user.role) {
+          // Sync cookies for middleware
+          setCookie("token", storedToken);
+          setCookie("user_role", user.role);
+          set({ user, token: storedToken, loading: false });
+          return;
+        }
       } catch {
         // invalid stored data
       }

@@ -9,6 +9,8 @@ const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/about", label: "About Us" },
   { href: "/activities", label: "Activities" },
+  { href: "/projects", label: "Projects" },
+  { href: "/articles", label: "Articles" },
   { href: "/support", label: "Support Us" },
   { href: "/contact", label: "Contact" },
 ];
@@ -70,17 +72,21 @@ export default function Navbar() {
                     className="flex items-center gap-2 pl-3 pr-1 py-1 rounded-full hover:bg-surface-container-low transition-colors"
                   >
                     <span className="text-sm font-bold text-on-surface hidden sm:block">
-                      {user.first_name}
+                      {user.first_name || user.email || "User"}
                     </span>
                     <div className="w-9 h-9 rounded-full bg-primary-container flex items-center justify-center text-primary font-bold text-sm">
-                      {user.first_name.charAt(0)}{user.last_name.charAt(0)}
+                      {(user.first_name?.charAt(0) || user.email?.charAt(0) || "U").toUpperCase()}
+                      {user.last_name?.charAt(0)?.toUpperCase() || ""}
                     </div>
                   </button>
 
                   {dropdownOpen && (
                     <div className="absolute right-0 top-full mt-2 w-56 bg-surface-container-lowest rounded-xl shadow-2xl border border-outline-variant/10 overflow-hidden">
                       <div className="px-4 py-3 border-b border-outline-variant/10">
-                        <p className="font-bold text-on-surface text-sm">{user.first_name} {user.last_name}</p>
+                        <p className="font-bold text-on-surface text-sm">
+                          {user.first_name || ""} {user.last_name || ""}
+                          {!user.first_name && !user.last_name && (user.email || "User")}
+                        </p>
                         <p className="text-xs text-on-surface-variant">{user.email}</p>
                         <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-primary/10 text-primary uppercase">
                           {user.role}

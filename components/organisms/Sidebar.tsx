@@ -22,6 +22,8 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard/roles", icon: "security", label: "Roles", requiredAction: "read", requiredSubject: "Role" },
   { href: "/dashboard/vets", icon: "medical_services", label: "Veterinarians", requiredAction: "read", requiredSubject: "Vet" },
   { href: "/dashboard/donations", icon: "volunteer_activism", label: "Donations", filledIcon: true, requiredAction: "read", requiredSubject: "Donation" },
+  { href: "/dashboard/projects", icon: "folder_special", label: "Projects", requiredAction: "create", requiredSubject: "Project" },
+  { href: "/dashboard/articles", icon: "article", label: "Articles", requiredAction: "create", requiredSubject: "Article" },
   { href: "/dashboard/tasks", icon: "task_alt", label: "Tasks", requiredAction: "read", requiredSubject: "Task" },
   { href: "/dashboard/logs", icon: "list_alt", label: "Activity Logs", requiredAction: "read", requiredSubject: "ActivityLog" },
   { href: "/dashboard/map", icon: "map", label: "Activity Map", requiredAction: "read", requiredSubject: "FeedingPoint" },

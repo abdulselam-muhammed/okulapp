@@ -33,6 +33,16 @@ export function proxy(request: NextRequest) {
       return NextResponse.next();
     }
 
+    // Public GET for projects and articles (landing pages need to read without auth)
+    const isPublicReadPath =
+      pathname === "/api/projects" ||
+      pathname.startsWith("/api/projects/") ||
+      pathname === "/api/articles" ||
+      pathname.startsWith("/api/articles/");
+    if (isPublicReadPath && request.method === "GET") {
+      return NextResponse.next();
+    }
+
     const authHeader = request.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return NextResponse.json(

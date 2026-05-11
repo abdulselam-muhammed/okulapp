@@ -10,3 +10,7 @@ export { useTasksStore } from "./tasks.store";
 export type { TaskItem } from "./tasks.store";
 export { useNotificationsStore } from "./notifications.store";
 export type { NotificationItem } from "./notifications.store";
+export { useProjectsStore } from "./projects.store";
+export type { ProjectItem, ProjectImage } from "./projects.store";
+export { useArticlesStore } from "./articles.store";
+export type { ArticleItem } from "./articles.store";

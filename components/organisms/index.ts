@@ -11,3 +11,5 @@ export { default as EditAvailabilityModal } from "./EditAvailabilityModal";
 export { default as AddTaskModal } from "./AddTaskModal";
 export { default as DonationForm } from "./DonationForm";
 export { default as InvoiceModal } from "./InvoiceModal";
+export { default as ProjectFormModal } from "./ProjectFormModal";
+export { default as ArticleFormModal } from "./ArticleFormModal";

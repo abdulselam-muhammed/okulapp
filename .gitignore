@@ -44,3 +44,7 @@ next-env.d.ts
 
 
 /proje_sitesi
+
+# uploaded user content
+/public/uploads/*
+!/public/uploads/.gitkeep

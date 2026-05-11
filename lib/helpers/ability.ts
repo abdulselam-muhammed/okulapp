@@ -33,7 +33,9 @@ export type Subjects =
   | "Notification"
   | "Dashboard"
   | "DashboardStats"
-  | "ActivityLog";
+  | "ActivityLog"
+  | "Project"
+  | "Article";
 
 export type AppAbility = MongoAbility<[Actions, Subjects]>;
 
@@ -46,6 +48,9 @@ export function defineAbilityFor(role: string | null | undefined): AppAbility {
   can("update", "Notification"); // mark as read
   can("create", "Donation"); // guest donations allowed
   can("create", "Report");
+  // Public landing pages
+  can("read", "Project");
+  can("read", "Article");
 
   switch (role) {
     case "admin":
