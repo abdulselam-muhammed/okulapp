@@ -193,4 +193,13 @@ scripts/              # Seed & maintenance scripts
 
 ## 📄 License
 
-This project is private and intended for educational purposes.
+This project is **source-available** under the
+[PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/).
+
+You are free to **view, use, modify, and share** this code for **personal,
+educational, and other non-commercial purposes**. **Commercial use is not
+permitted** — you may not use this software, or any derivative of it, to run a
+business or for any other commercial advantage without explicit written
+permission from the author.
+
+See the [LICENSE](LICENSE) file for full terms.
