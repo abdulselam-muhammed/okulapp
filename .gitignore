@@ -48,3 +48,8 @@ next-env.d.ts
 # uploaded user content
 /public/uploads/*
 !/public/uploads/.gitkeep
+
+# AI assistant config (local only)
+CLAUDE.md
+AGENTS.md
+.claude/
